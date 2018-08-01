@@ -9,10 +9,10 @@ import { MAX_CONCURRENT_SUBSCRIPTON_REQUESTS } from './constants';
 import { AzureRepositoryNode, AzureImageNode, AzureRegistryNode } from '../explorer/models/azureRegistryNodes';
 import { Registry } from 'azure-arm-containerregistry/lib/models';
 import request = require('request-promise');
-import { Repository, AzureImage } from '../explorer/utils/azureUtils';
+import { Repository, AzureImage, getSub } from '../explorer/utils/azureUtils';
 /* Singleton for facilitating communication with Azure account services by providing extended shared
   functionality and extension wide access to azureAccount. Tool for internal use.
-  Authors: Esteban Rey L, Jackson Stokes
+  Authors: Esteban Rey L, Jackson Stokes, Julia Lieberman
 */
 
 export class AzureCredentialsManager {
@@ -91,11 +91,9 @@ export class AzureCredentialsManager {
             }
             await subPool.runAll();
         }
-
         if (sortFunction && registries.length > 1) {
             registries.sort(sortFunction);
         }
-
         return registries;
     }
 
@@ -120,13 +118,10 @@ export class AzureCredentialsManager {
     }
 
     public getCredentialByTenantId(tenantId: string): ServiceClientCredentials {
-
         const session = this.getAccount().sessions.find((azureSession) => azureSession.tenantId.toLowerCase() === tenantId.toLowerCase());
-
         if (session) {
             return session.credentials;
         }
-
         throw new Error(`Failed to get credentials, tenant ${tenantId} not found.`);
     }
 
@@ -149,19 +144,12 @@ export class AzureCredentialsManager {
         const allRepos: Repository[] = [];
         let repo: Repository;
         let resourceGroup: string = registry.id.slice(registry.id.search('resourceGroups/') + 'resourceGroups/'.length, registry.id.search('/providers/'));
-        let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
-        const subs = this.getFilteredSubscriptionList();
-        //get the actual subscription object by using the id found on the registry id above
-        const subscription = subs.find(function (sub): boolean {
-            return sub.subscriptionId === subscriptionId;
-        });
+        const subscription = getSub(registry);
         let azureAccount: AzureAccount = AzureCredentialsManager.getInstance().getAccount();
         if (!azureAccount) {
             return [];
         }
-
         const { accessToken, refreshToken } = await this.getTokens(registry);
-
         if (accessToken && refreshToken) {
 
             await request.get('https://' + registry.loginServer + '/v2/_catalog', {
@@ -189,12 +177,7 @@ export class AzureCredentialsManager {
 * @returns : the updated refresh and access tokens which can be used to generate a header for an API call
 */
     public async getTokens(registry: Registry): Promise<{ refreshToken: any, accessToken: any }> {
-        let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
-        const subs = this.getFilteredSubscriptionList();
-        //get the actual subscription object by using the id found on the registry id above
-        const subscription = subs.find(function (sub): boolean {
-            return sub.subscriptionId === subscriptionId;
-        });
+        const subscription = getSub(registry);
         const tenantId: string = subscription.tenantId;
         let azureAccount: AzureAccount = this.getAccount();
         if (!azureAccount) {
@@ -285,6 +268,11 @@ export class AzureCredentialsManager {
         return bufferLat1.toString('latin1');
     }
 
+    /**
+     * Lots of https requests but they must be separate from getTokens because the forms are different
+     * @param element the repository where the desired images are
+     * @returns a list of AzureImage objects from the given repository (see azureUtils.ts)
+     */
     public async getImages(element: Repository): Promise<AzureImage[]> {
         let allImages: AzureImage[] = [];
         let image: AzureImage;
@@ -383,5 +371,4 @@ export class AzureCredentialsManager {
         }
         return { password, username };
     }
-
 }

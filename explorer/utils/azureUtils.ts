@@ -83,4 +83,16 @@ export function browseAzurePortal(context?: AzureRegistryNode | AzureRepositoryN
 
 }
 
-
+/**
+ *
+ * @param registry gets the subscription for a given registry
+ * @returns a subscription object
+ */
+export function getSub(registry: Registry): SubscriptionModels.Subscription {
+    let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
+    const subs = AzureCredentialsManager.getInstance().getFilteredSubscriptionList();
+    let subscription = subs.find(function (sub): boolean {
+        return sub.subscriptionId === subscriptionId;
+    });
+    return subscription;
+}

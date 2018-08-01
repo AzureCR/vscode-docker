@@ -6,7 +6,7 @@ import { Registry } from "azure-arm-containerregistry/lib/models";
 import { AzureCredentialsManager } from '../utils/azureCredentialsManager';
 import { AzureRepositoryNode, AzureImageNode } from '../explorer/models/AzureRegistryNodes';
 import { AzureAccount } from "../typings/azure-account.api";
-import { Repository, AzureImage } from "../explorer/utils/azureUtils";
+import { Repository, AzureImage, getSub } from "../explorer/utils/azureUtils";
 const teleCmdId: string = 'vscode-docker.deleteAzureImage';
 
 
@@ -144,20 +144,6 @@ async function getRepository(registry: Registry): Promise<Repository> {
     return repository;
 }
 
-/**
- * function to get the subscription of any given registry
- * @param registry the registry to get a subscription from
- * @returns a Subscription object for the provided registry
- */
-function getSub(registry: Registry): SubscriptionModels.Subscription {
-    //get the subscription object by using the id found on the registry id
-    let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
-    const subs = AzureCredentialsManager.getInstance().getFilteredSubscriptionList();
-    let subscription = subs.find(function (sub): boolean {
-        return sub.subscriptionId === subscriptionId;
-    });
-    return subscription;
-}
 
 /**
  * function to let user choose a registry for use
