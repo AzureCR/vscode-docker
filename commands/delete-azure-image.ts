@@ -39,18 +39,13 @@ export async function deleteAzureImage(context?: AzureImageNode) {
     if (!context) {
         registry = await getRegistry();
         subscription = getSub(registry);
-
-
-        //get the desired repository to delete
         let repository = await getRepository(registry);
         repoName = repository.name;
-
-        //get the desired image
         const image = await getImage(repository);
         tag = image.tag;
     }
 
-    //ensure user truly wants to delete registry
+    //ensure user truly wants to delete image
     let opt: vscode.InputBoxOptions = {
         ignoreFocusOut: true,
         placeHolder: 'No',
@@ -60,7 +55,6 @@ export async function deleteAzureImage(context?: AzureImageNode) {
     let answer = await vscode.window.showInputBox(opt);
     if (answer !== 'Yes') return;
 
-    // generate credentials before requesting a delete.
     if (context) {
         username = context.userName;
         password = context.password;
@@ -71,15 +65,14 @@ export async function deleteAzureImage(context?: AzureImageNode) {
         repoName = wholeName[0];
         tag = wholeName[1];
     }
-    else { //this is separated from !context above so it only calls loginCredentials once user has assured they want to delete the repository
+    else { //this is separated from !context above so it only calls loginCredentials once user has assured they want to delete the image
         let creds = await AzureCredentialsManager.getInstance().loginCredentials(subscription, registry);
         username = creds.username;
         password = creds.password;
     }
 
     let path = `/v2/_acr/${repoName}/tags/${tag}`;
-    console.log('path = ' + path);
-    await request_data_from_registry('delete', registry.loginServer, path, username, password);
+    await request_data_from_registry('delete', registry.loginServer, path, username, password); //official call to delete the image
 }
 
 
@@ -111,6 +104,11 @@ async function request_data_from_registry(http_method: string, login_server: str
     }
 }
 
+/**
+ * function to allow user to pick a desired image for use
+ * @param repository the repository to look in
+ * @returns an AzureImage object (see azureUtils.ts)
+ */
 async function getImage(repository: Repository): Promise<AzureImage> {
     const repoImages: azureUtils.AzureImage[] = await AzureCredentialsManager.getInstance().getImages(repository);
     console.log(repoImages);
@@ -125,6 +123,11 @@ async function getImage(repository: Repository): Promise<AzureImage> {
     return image;
 }
 
+/**
+ * function to allow user to pick a desired repository for use
+ * @param registry the registry to choose a repository from
+ * @returns a Repository object (see azureUtils.ts)
+ */
 async function getRepository(registry: Registry): Promise<Repository> {
     const myRepos: azureUtils.Repository[] = await AzureCredentialsManager.getInstance().getAzureRepositories(registry);
     let rep: string[] = [];
@@ -141,6 +144,11 @@ async function getRepository(registry: Registry): Promise<Repository> {
     return repository;
 }
 
+/**
+ * function to get the subscription of any given registry
+ * @param registry the registry to get a subscription from
+ * @returns a Subscription object for the provided registry
+ */
 function getSub(registry: Registry): SubscriptionModels.Subscription {
     //get the subscription object by using the id found on the registry id
     let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
@@ -151,6 +159,10 @@ function getSub(registry: Registry): SubscriptionModels.Subscription {
     return subscription;
 }
 
+/**
+ * function to let user choose a registry for use
+ * @returns a Registry object
+ */
 async function getRegistry(): Promise<Registry> {
     //first get desired registry
     let registries = await AzureCredentialsManager.getInstance().getRegistries();
