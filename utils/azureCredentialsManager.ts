@@ -1,12 +1,15 @@
 import { SubscriptionClient, ResourceManagementClient, SubscriptionModels } from 'azure-arm-resource';
-import { AzureAccount } from '../typings/azure-account.api';
+import { AzureAccount, AzureSession } from '../typings/azure-account.api';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AsyncPool } from '../utils/asyncpool';
 import { ContainerRegistryManagementClient } from 'azure-arm-containerregistry';
 import * as ContainerModels from '../node_modules/azure-arm-containerregistry/lib/models';
 import { ResourceGroup, ResourceGroupListResult } from "azure-arm-resource/lib/resource/models";
 import { MAX_CONCURRENT_SUBSCRIPTON_REQUESTS } from './constants';
-
+import { AzureRepositoryNode, AzureImageNode, AzureRegistryNode } from '../explorer/models/azureRegistryNodes';
+import { Registry } from 'azure-arm-containerregistry/lib/models';
+import request = require('request-promise');
+import { Repository, AzureImage } from '../explorer/utils/azureUtils';
 /* Singleton for facilitating communication with Azure account services by providing extended shared
   functionality and extension wide access to azureAccount. Tool for internal use.
   Authors: Esteban Rey L, Jackson Stokes
@@ -135,4 +138,250 @@ export class AzureCredentialsManager {
         }
         return await this.azureAccount.waitForLogin();
     }
+
+
+    /**
+     * Developers can use this to visualize and list repositories on a given Registry. This is not a command, just a developer tool.
+     * @param registry : the registry whose repositories you want to see
+     * @returns allRepos : an array of Repository objects that exist within the given registry
+     */
+    public async getAzureRepositories(registry: Registry): Promise<Repository[]> {
+        const allRepos: Repository[] = [];
+        let repo: Repository;
+        let resourceGroup: string = registry.id.slice(registry.id.search('resourceGroups/') + 'resourceGroups/'.length, registry.id.search('/providers/'));
+        let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
+        const subs = this.getFilteredSubscriptionList();
+        //get the actual subscription object by using the id found on the registry id above
+        const subscription = subs.find(function (sub): boolean {
+            return sub.subscriptionId === subscriptionId;
+        });
+        let azureAccount: AzureAccount = AzureCredentialsManager.getInstance().getAccount();
+        if (!azureAccount) {
+            return [];
+        }
+
+        const { accessToken, refreshToken } = await this.getTokens(registry);
+
+        if (accessToken && refreshToken) {
+
+            await request.get('https://' + registry.loginServer + '/v2/_catalog', {
+                auth: {
+                    bearer: accessToken
+                }
+            }, (err, httpResponse, body) => {
+                if (body.length > 0) {
+                    const repositories = JSON.parse(body).repositories;
+                    for (let i = 0; i < repositories.length; i++) {
+                        repo = new Repository(azureAccount, registry, repositories[i], subscription, resourceGroup, accessToken, refreshToken);
+                        allRepos.push(repo);
+                    }
+                }
+            });
+        }
+        //Note these are ordered by default in alphabetical order
+        return allRepos;
+    }
+
+
+    /**
+* this function gets the refresh and access tokens for a given registry
+* @param registry : the registry to get credentials for
+* @returns : the updated refresh and access tokens which can be used to generate a header for an API call
+*/
+    public async getTokens(registry: Registry): Promise<{ refreshToken: any, accessToken: any }> {
+        let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
+        const subs = this.getFilteredSubscriptionList();
+        //get the actual subscription object by using the id found on the registry id above
+        const subscription = subs.find(function (sub): boolean {
+            return sub.subscriptionId === subscriptionId;
+        });
+        const tenantId: string = subscription.tenantId;
+        let azureAccount: AzureAccount = this.getAccount();
+        if (!azureAccount) {
+            return;
+        }
+
+        const session: AzureSession = azureAccount.sessions.find((s, i, array) => s.tenantId.toLowerCase() === tenantId.toLowerCase());
+        const { accessToken, refreshToken } = await this.acquireToken(session);
+
+        //regenerates in case they have expired
+        if (accessToken && refreshToken) {
+            let refreshTokenARC;
+            let accessTokenARC;
+
+            await request.post('https://' + registry.loginServer + '/oauth2/exchange', {
+                form: {
+                    grant_type: 'access_token_refresh_token',
+                    service: registry.loginServer,
+                    tenant: tenantId,
+                    refresh_token: refreshToken,
+                    access_token: accessToken
+                }
+            }, (err, httpResponse, body) => {
+                if (body.length > 0) {
+                    refreshTokenARC = JSON.parse(body).refresh_token;
+                } else {
+                    return;
+                }
+            });
+
+            await request.post('https://' + registry.loginServer + '/oauth2/token', {
+                form: {
+                    grant_type: 'refresh_token',
+                    service: registry.loginServer,
+                    scope: 'registry:catalog:*',
+                    refresh_token: refreshTokenARC
+                }
+            }, (err, httpResponse, body) => {
+                if (body.length > 0) {
+                    accessTokenARC = JSON.parse(body).access_token;
+                } else {
+                    return;
+                }
+            });
+            if (refreshTokenARC && accessTokenARC) {
+                return { 'refreshToken': refreshTokenARC, 'accessToken': accessTokenARC };
+            }
+        }
+        return { refreshToken, accessToken }
+    }
+
+    public async acquireToken(session: AzureSession) {
+        return new Promise<{ accessToken: string; refreshToken: string; }>((resolve, reject) => {
+            const credentials: any = session.credentials;
+            const environment: any = session.environment;
+            credentials.context.acquireToken(environment.activeDirectoryResourceId, credentials.username, credentials.clientId, function (err: any, result: any) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({
+                        accessToken: result.accessToken,
+                        refreshToken: result.refreshToken
+                    });
+                }
+            });
+        });
+    }
+
+    /**
+         *
+         * @param username : username for creating header
+         * @param password : password for creating header
+         */
+    public _get_authorization_header(username: string, password: string): string {
+        let auth = ('Basic ' + (this.encode(username + ':' + password).trim()));
+        return (auth);
+    }
+
+    /**
+ * first encodes to base 64, and then to latin1. See online documentation to see typescript encoding capabilities
+ * see https://nodejs.org/api/buffer.html#buffer_buf_tostring_encoding_start_end for details {Buffers and Character Encodings}
+ * current character encodings include: ascii, utf8, utf16le, ucs2, base64, latin1, binary, hex. Version v6.4.0
+ * @param str : the string to encode for api URL purposes
+ */
+    public encode(str: string): string {
+        let bufferB64 = new Buffer(str);
+        let bufferLat1 = new Buffer(bufferB64.toString('base64'));
+        return bufferLat1.toString('latin1');
+    }
+
+    public async getImages(element: Repository): Promise<AzureImage[]> {
+        let allImages: AzureImage[] = [];
+        let image: AzureImage;
+        let tags;
+        let azureAccount: AzureAccount = this.getAccount();
+        let tenantId: string = element.subscription.tenantId;
+        let refreshTokenARC;
+        let accessTokenARC;
+        const session: AzureSession = azureAccount.sessions.find((s, i, array) => s.tenantId.toLowerCase() === tenantId.toLowerCase());
+        const { accessToken, refreshToken } = await this.acquireToken(session);
+        console.log(element);
+        if (accessToken && refreshToken) {
+            const tenantId = element.subscription.tenantId;
+
+            await request.post('https://' + element.registry.loginServer + '/oauth2/exchange', {
+                form: {
+                    grant_type: 'access_token_refresh_token',
+                    service: element.registry.loginServer,
+                    tenant: tenantId,
+                    refresh_token: refreshToken,
+                    access_token: accessToken
+                }
+            }, (err, httpResponse, body) => {
+                if (body.length > 0) {
+                    refreshTokenARC = JSON.parse(body).refresh_token;
+                } else {
+                    return [];
+                }
+            });
+
+            await request.post('https://' + element.registry.loginServer + '/oauth2/token', {
+                form: {
+                    grant_type: 'refresh_token',
+                    service: element.registry.loginServer,
+                    scope: 'repository:' + element.name + ':pull',
+                    refresh_token: refreshTokenARC
+                }
+            }, (err, httpResponse, body) => {
+                if (body.length > 0) {
+                    accessTokenARC = JSON.parse(body).access_token;
+                } else {
+                    return [];
+                }
+            });
+
+            await request.get('https://' + element.registry.loginServer + '/v2/' + element.name + '/tags/list', {
+                auth: {
+                    bearer: accessTokenARC
+                }
+            }, (err, httpResponse, body) => {
+                if (err) { return []; }
+
+                if (body.length > 0) {
+                    tags = JSON.parse(body).tags;
+                }
+            });
+
+            for (let i = 0; i < tags.length; i++) {
+                image = new AzureImage(azureAccount, element.registry, element, tags[i], element.subscription, element.resourceGroupName, accessTokenARC, refreshTokenARC, element.password, element.username);
+                allImages.push(image);
+            }
+        }
+        return allImages;
+    }
+
+    //Implements new Service principal model for ACR container registries while maintaining old admin enabled use
+    /**
+     * this function implements a new Service principal model for ACR and gets the valid login credentials to make an API call
+     * @param subscription : the subscription the registry is on
+     * @param registry : the registry to get login credentials for
+     * @param context : if command is invoked through a right click on an AzureRepositoryNode. This context has a password and username
+     */
+    public async loginCredentials(subscription, registry, context?: AzureImageNode | AzureRepositoryNode): Promise<{ password: string, username: string }> {
+        let node: AzureImageNode | AzureRepositoryNode;
+        if (context) {
+            node = context;
+        }
+        let username: string;
+        let password: string;
+        const client = this.getContainerRegistryManagementClient(subscription);
+        const resourceGroup: string = registry.id.slice(registry.id.search('resourceGroups/') + 'resourceGroups/'.length, registry.id.search('/providers/'));
+        if (context) {
+            username = node.userName;
+            password = node.password;
+        }
+        else if (registry.adminUserEnabled) {
+            let creds = await client.registries.listCredentials(resourceGroup, registry.name);
+            password = creds.passwords[0].value;
+            username = creds.username;
+        }
+        else {
+            //grab the access token to be used as a password, and a generic username
+            let creds = await this.getTokens(registry);
+            password = creds.accessToken;
+            username = '00000000-0000-0000-0000-000000000000';
+        }
+        return { password, username };
+    }
+
 }

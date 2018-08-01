@@ -41,6 +41,7 @@ import { ext } from "./extensionVariables";
 import { Reporter } from './telemetry/telemetry';
 import { AzureAccount } from './typings/azure-account.api';
 import { AzureCredentialsManager } from './utils/azureCredentialsManager';
+import { deleteAzureImage } from './commands/delete-azure-image';
 
 export const FROM_DIRECTIVE_PATTERN = /^\s*FROM\s*([\w-\/:]*)(\s*AS\s*[a-z][a-z0-9-_\\.]*)?$/i;
 export const COMPOSE_FILE_GLOB_PATTERN = '**/[dD]ocker-[cC]ompose*.{yaml,yml}';
@@ -116,6 +117,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.compose.down', composeDown));
     ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.compose.restart', composeRestart));
     ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.system.prune', systemPrune));
+    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.deleteAzureImage', deleteAzureImage));
 
     ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.createWebApp', async (context?: AzureImageNode | DockerHubImageNode) => {
         if (context) {
