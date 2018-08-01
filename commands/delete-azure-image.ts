@@ -6,6 +6,7 @@ import { Registry } from "azure-arm-containerregistry/lib/models";
 import { AzureCredentialsManager } from '../utils/azureCredentialsManager';
 import { AzureRepositoryNode, AzureImageNode } from '../explorer/models/AzureRegistryNodes';
 import { AzureAccount } from "../typings/azure-account.api";
+import { Repository, AzureImage } from "../explorer/utils/azureUtils";
 const teleCmdId: string = 'vscode-docker.deleteAzureImage';
 
 
@@ -29,8 +30,6 @@ export async function deleteAzureImage(context?: AzureImageNode) {
         return;
     }
 
-    console.log(context);
-
     let registry: Registry;
     let subscription: SubscriptionModels.Subscription;
     let repoName: string;
@@ -38,46 +37,16 @@ export async function deleteAzureImage(context?: AzureImageNode) {
     let password: string;
     let tag: string;
     if (!context) {
-        //first get desired registry
-        let registries = await AzureCredentialsManager.getInstance().getRegistries();
-        let reg: string[] = [];
-        for (let i = 0; i < registries.length; i++) {
-            reg.push(registries[i].name);
-        }
-        let desired = await vscode.window.showQuickPick(reg, { 'canPickMany': false, 'placeHolder': 'Choose the Registry from which your desired image exists' });
-        if (desired === undefined) return;
-        registry = registries.find(reg => { return desired === reg.name });
+        registry = await getRegistry();
+        subscription = getSub(registry);
 
-        //get the subscription object by using the id found on the registry id
-        let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
-        const subs = AzureCredentialsManager.getInstance().getFilteredSubscriptionList();
-        subscription = subs.find(function (sub): boolean {
-            return sub.subscriptionId === subscriptionId;
-        });
 
         //get the desired repository to delete
-        const myRepos: azureUtils.Repository[] = await AzureCredentialsManager.getInstance().getAzureRepositories(registry);
-        let rep: string[] = [];
-        for (let j = 0; j < myRepos.length; j++) {
-            rep.push(myRepos[j].name);
-        }
-        let desiredRepo = await vscode.window.showQuickPick(rep, { 'canPickMany': false, 'placeHolder': 'Choose the repository from which your desired image exists' });
-        if (desiredRepo === undefined) return;
-        let repository = myRepos.find(rep => { return desiredRepo === rep.name });
-        if (repository === undefined) return;
+        let repository = await getRepository(registry);
         repoName = repository.name;
 
-
-        const repoImages: azureUtils.AzureImage[] = await AzureCredentialsManager.getInstance().getImages(repository);
-        console.log(repoImages);
-        let imageList: string[] = [];
-        for (let j = 0; j < repoImages.length; j++) {
-            imageList.push(repoImages[j].tag);
-        }
-        let desiredImage = await vscode.window.showQuickPick(imageList, { 'canPickMany': false, 'placeHolder': 'Choose the image you want to delete' });
-        if (desiredImage === undefined) return;
-        let image = repoImages.find(imageList => { return desiredImage === imageList.tag });
-        if (image === undefined) return;
+        //get the desired image
+        const image = await getImage(repository);
         tag = image.tag;
     }
 
@@ -110,8 +79,7 @@ export async function deleteAzureImage(context?: AzureImageNode) {
 
     let path = `/v2/_acr/${repoName}/tags/${tag}`;
     console.log('path = ' + path);
-    let r = await request_data_from_registry('delete', registry.loginServer, path, username, password);
-
+    await request_data_from_registry('delete', registry.loginServer, path, username, password);
 }
 
 
@@ -143,3 +111,55 @@ async function request_data_from_registry(http_method: string, login_server: str
     }
 }
 
+async function getImage(repository: Repository): Promise<AzureImage> {
+    const repoImages: azureUtils.AzureImage[] = await AzureCredentialsManager.getInstance().getImages(repository);
+    console.log(repoImages);
+    let imageList: string[] = [];
+    for (let j = 0; j < repoImages.length; j++) {
+        imageList.push(repoImages[j].tag);
+    }
+    let desiredImage = await vscode.window.showQuickPick(imageList, { 'canPickMany': false, 'placeHolder': 'Choose the image you want to delete' });
+    if (desiredImage === undefined) return;
+    let image = repoImages.find(imageList => { return desiredImage === imageList.tag });
+    if (image === undefined) return;
+    return image;
+}
+
+async function getRepository(registry: Registry): Promise<Repository> {
+    const myRepos: azureUtils.Repository[] = await AzureCredentialsManager.getInstance().getAzureRepositories(registry);
+    let rep: string[] = [];
+    for (let j = 0; j < myRepos.length; j++) {
+        rep.push(myRepos[j].name);
+    }
+    let desiredRepo = await vscode.window.showQuickPick(rep, { 'canPickMany': false, 'placeHolder': 'Choose the repository from which your desired image exists' });
+    if (desiredRepo === undefined) return;
+    let repository = myRepos.find(rep => { return desiredRepo === rep.name });
+    if (repository === undefined) {
+        vscode.window.showErrorMessage('Could not find repository. Check that it still exists!');
+        return;
+    }
+    return repository;
+}
+
+function getSub(registry: Registry): SubscriptionModels.Subscription {
+    //get the subscription object by using the id found on the registry id
+    let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
+    const subs = AzureCredentialsManager.getInstance().getFilteredSubscriptionList();
+    let subscription = subs.find(function (sub): boolean {
+        return sub.subscriptionId === subscriptionId;
+    });
+    return subscription;
+}
+
+async function getRegistry(): Promise<Registry> {
+    //first get desired registry
+    let registries = await AzureCredentialsManager.getInstance().getRegistries();
+    let reg: string[] = [];
+    for (let i = 0; i < registries.length; i++) {
+        reg.push(registries[i].name);
+    }
+    let desired = await vscode.window.showQuickPick(reg, { 'canPickMany': false, 'placeHolder': 'Choose the Registry from which your desired image exists' });
+    if (desired === undefined) return;
+    let registry = registries.find(reg => { return desired === reg.name });
+    return registry;
+}
