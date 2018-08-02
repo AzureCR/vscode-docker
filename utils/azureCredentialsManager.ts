@@ -4,7 +4,9 @@ import { ResourceManagementClient, SubscriptionClient, SubscriptionModels } from
 import { ResourceGroup, ResourceGroupListResult } from "azure-arm-resource/lib/resource/models";
 import { ServiceClientCredentials } from 'ms-rest';
 import request = require('request-promise');
+import * as vscode from "vscode";
 import { AzureImageNode, AzureRegistryNode, AzureRepositoryNode } from '../explorer/models/azureRegistryNodes';
+import * as azureUtils from '../explorer/utils/azureUtils';
 import { AzureImage, getSub, Repository } from '../explorer/utils/azureUtils';
 import * as ContainerModels from '../node_modules/azure-arm-containerregistry/lib/models';
 import { AzureAccount, AzureSession } from '../typings/azure-account.api';
@@ -340,7 +342,7 @@ export class AzureCredentialsManager {
      * @param registry : the registry to get login credentials for
      * @param context : if command is invoked through a right click on an AzureRepositoryNode. This context has a password and username
      */
-    public async loginCredentials(subscription: SubscriptionModels.Subscription, registry: Registry, context: AzureImageNode | AzureRepositoryNode): Promise<{ password: string, username: string }> {
+    public async loginCredentials(subscription: SubscriptionModels.Subscription, registry: Registry, context?: AzureImageNode | AzureRepositoryNode): Promise<{ password: string, username: string }> {
         let node: AzureImageNode | AzureRepositoryNode;
         if (context) {
             node = context;
@@ -363,5 +365,62 @@ export class AzureCredentialsManager {
             username = '00000000-0000-0000-0000-000000000000';
         }
         return { password, username };
+    }
+
+    /**
+     * function to allow user to pick a desired image for use
+     * @param repository the repository to look in
+     * @returns an AzureImage object (see azureUtils.ts)
+     */
+    public async getImage(repository: Repository): Promise<AzureImage> {
+        const repoImages: azureUtils.AzureImage[] = await AzureCredentialsManager.getInstance().getImages(repository);
+        console.log(repoImages);
+        let imageList: string[] = [];
+        for (let tempImage of repoImages) {
+            imageList.push(tempImage.tag);
+        }
+        let desiredImage = await vscode.window.showQuickPick(imageList, { 'canPickMany': false, 'placeHolder': 'Choose the image you want to delete' });
+        if (desiredImage === undefined) { return; }
+        let image = repoImages.find((myImage): boolean => { return desiredImage === myImage.tag });
+        if (image === undefined) { return; }
+        return image;
+    }
+
+    /**
+     * function to allow user to pick a desired repository for use
+     * @param registry the registry to choose a repository from
+     * @returns a Repository object (see azureUtils.ts)
+     */
+    public async getRepository(registry: Registry): Promise<Repository> {
+        const myRepos: azureUtils.Repository[] = await AzureCredentialsManager.getInstance().getAzureRepositories(registry);
+        let rep: string[] = [];
+        for (let repo of myRepos) {
+            rep.push(repo.name);
+        }
+        let desiredRepo = await vscode.window.showQuickPick(rep, { 'canPickMany': false, 'placeHolder': 'Choose the repository from which your desired image exists' });
+        if (desiredRepo === undefined) { return; }
+        let repository = myRepos.find((currentRepo): boolean => { return desiredRepo === currentRepo.name });
+        if (repository === undefined) {
+            vscode.window.showErrorMessage('Could not find repository. Check that it still exists!');
+            return;
+        }
+        return repository;
+    }
+
+    /**
+     * function to let user choose a registry for use
+     * @returns a Registry object
+     */
+    public async getRegistry(): Promise<Registry> {
+        //first get desired registry
+        let registries = await AzureCredentialsManager.getInstance().getRegistries();
+        let reg: string[] = [];
+        for (let registryName of registries) {
+            reg.push(registryName.name);
+        }
+        let desired = await vscode.window.showQuickPick(reg, { 'canPickMany': false, 'placeHolder': 'Choose the Registry from which your desired image exists' });
+        if (desired === undefined) { return; }
+        let registry = registries.find((currentReg): boolean => { return desired === currentReg.name });
+        return registry;
     }
 }

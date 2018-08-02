@@ -2,6 +2,7 @@ import { Registry } from 'azure-arm-containerregistry/lib/models';
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as opn from 'opn';
 import request = require('request-promise');
+import * as vscode from 'vscode';
 import { AzureAccount, AzureSession } from '../../typings/azure-account.api';
 import { AzureCredentialsManager } from '../../utils/AzureCredentialsManager';
 import { AzureImageNode, AzureRegistryNode, AzureRepositoryNode } from '../models/azureRegistryNodes';
@@ -94,4 +95,32 @@ export function getSub(registry: Registry): SubscriptionModels.Subscription {
         return sub.subscriptionId === subscriptionId;
     });
     return subscription;
+}
+
+/**
+ *
+ * @param http_method : the http method, this function currently only uses delete
+ * @param login_server: the login server of the registry
+ * @param path : the URL path
+ * @param username : registry username, can be in generic form of 0's, used to generate authorization header
+ * @param password : registry password, can be in form of accessToken, used to generate authorization header
+ */
+export async function request_data_from_registry(http_method: string, login_server: string, path: string, username: string, password: string): Promise<void> {
+    let url: string = `https://${login_server}${path}`;
+    let header = AzureCredentialsManager.getInstance()._get_authorization_header(username, password);
+    let opt = {
+        headers: { 'Authorization': header },
+        http_method: http_method,
+        url: url
+    }
+    let err = false;
+    try {
+        let response = await request.delete(opt);
+    } catch (error) {
+        err = true;
+        console.log(error);
+    }
+    if (!err) {
+        vscode.window.showInformationMessage('Successfully deleted image');
+    }
 }

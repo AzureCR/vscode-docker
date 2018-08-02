@@ -1,25 +1,23 @@
-import * as vscode from "vscode";
-import request = require('request-promise');
-import * as azureUtils from '../explorer/utils/azureUtils';
-import { SubscriptionModels } from 'azure-arm-resource';
 import { Registry } from "azure-arm-containerregistry/lib/models";
-import { AzureCredentialsManager } from '../utils/azureCredentialsManager';
-import { AzureRepositoryNode, AzureImageNode } from '../explorer/models/AzureRegistryNodes';
+import { SubscriptionModels } from 'azure-arm-resource';
+import request = require('request-promise');
+import * as vscode from "vscode";
+import { AzureImageNode } from '../explorer/models/AzureRegistryNodes';
+import * as azureUtils from '../explorer/utils/azureUtils';
+import { AzureImage, getSub, Repository } from "../explorer/utils/azureUtils";
 import { AzureAccount } from "../typings/azure-account.api";
-import { Repository, AzureImage, getSub } from "../explorer/utils/azureUtils";
+import { AzureCredentialsManager } from '../utils/azureCredentialsManager';
 const teleCmdId: string = 'vscode-docker.deleteAzureImage';
-
 
 /**
  * function to delete an Azure repository and its associated images
  * @param context : if called through right click on AzureRepositoryNode, the node object will be passed in. See azureRegistryNodes.ts for more info
  */
-export async function deleteAzureImage(context?: AzureImageNode) {
+export async function deleteAzureImage(context?: AzureImageNode): Promise<void> {
     let azureAccount: AzureAccount;
     if (context) {
         azureAccount = context.azureAccount;
-    }
-    else {
+    } else {
         azureAccount = await AzureCredentialsManager.getInstance().getAccount();
     }
     if (!azureAccount) {
@@ -37,11 +35,11 @@ export async function deleteAzureImage(context?: AzureImageNode) {
     let password: string;
     let tag: string;
     if (!context) {
-        registry = await getRegistry();
+        registry = await AzureCredentialsManager.getInstance().getRegistry();
         subscription = getSub(registry);
-        let repository = await getRepository(registry);
+        let repository: Repository = await AzureCredentialsManager.getInstance().getRepository(registry);
         repoName = repository.name;
-        const image = await getImage(repository);
+        const image = await AzureCredentialsManager.getInstance().getImage(repository);
         tag = image.tag;
     }
 
@@ -53,7 +51,7 @@ export async function deleteAzureImage(context?: AzureImageNode) {
         prompt: 'Are you sure you want to delete this image? Enter Yes or No: '
     };
     let answer = await vscode.window.showInputBox(opt);
-    if (answer !== 'Yes') return;
+    if (answer !== 'Yes') { return; }
 
     if (context) {
         username = context.userName;
@@ -64,100 +62,12 @@ export async function deleteAzureImage(context?: AzureImageNode) {
         let wholeName = repoName.split(':');
         repoName = wholeName[0];
         tag = wholeName[1];
-    }
-    else { //this is separated from !context above so it only calls loginCredentials once user has assured they want to delete the image
+    } else { //this is separated from !context above so it only calls loginCredentials once user has assured they want to delete the image
         let creds = await AzureCredentialsManager.getInstance().loginCredentials(subscription, registry);
         username = creds.username;
         password = creds.password;
     }
 
     let path = `/v2/_acr/${repoName}/tags/${tag}`;
-    await request_data_from_registry('delete', registry.loginServer, path, username, password); //official call to delete the image
-}
-
-
-/**
- *
- * @param http_method : the http method, this function currently only uses delete
- * @param login_server: the login server of the registry
- * @param path : the URL path
- * @param username : registry username, can be in generic form of 0's, used to generate authorization header
- * @param password : registry password, can be in form of accessToken, used to generate authorization header
- */
-async function request_data_from_registry(http_method: string, login_server: string, path: string, username: string, password: string) {
-    let url: string = `https://${login_server}${path}`;
-    let header = AzureCredentialsManager.getInstance()._get_authorization_header(username, password);
-    let opt = {
-        headers: { 'Authorization': header },
-        http_method: http_method,
-        url: url
-    }
-    let err = false;
-    try {
-        let response = await request.delete(opt);
-    } catch (error) {
-        err = true;
-        console.log(error);
-    }
-    if (!err) {
-        vscode.window.showInformationMessage('Successfully deleted image');
-    }
-}
-
-/**
- * function to allow user to pick a desired image for use
- * @param repository the repository to look in
- * @returns an AzureImage object (see azureUtils.ts)
- */
-async function getImage(repository: Repository): Promise<AzureImage> {
-    const repoImages: azureUtils.AzureImage[] = await AzureCredentialsManager.getInstance().getImages(repository);
-    console.log(repoImages);
-    let imageList: string[] = [];
-    for (let j = 0; j < repoImages.length; j++) {
-        imageList.push(repoImages[j].tag);
-    }
-    let desiredImage = await vscode.window.showQuickPick(imageList, { 'canPickMany': false, 'placeHolder': 'Choose the image you want to delete' });
-    if (desiredImage === undefined) return;
-    let image = repoImages.find(imageList => { return desiredImage === imageList.tag });
-    if (image === undefined) return;
-    return image;
-}
-
-/**
- * function to allow user to pick a desired repository for use
- * @param registry the registry to choose a repository from
- * @returns a Repository object (see azureUtils.ts)
- */
-async function getRepository(registry: Registry): Promise<Repository> {
-    const myRepos: azureUtils.Repository[] = await AzureCredentialsManager.getInstance().getAzureRepositories(registry);
-    let rep: string[] = [];
-    for (let j = 0; j < myRepos.length; j++) {
-        rep.push(myRepos[j].name);
-    }
-    let desiredRepo = await vscode.window.showQuickPick(rep, { 'canPickMany': false, 'placeHolder': 'Choose the repository from which your desired image exists' });
-    if (desiredRepo === undefined) return;
-    let repository = myRepos.find(rep => { return desiredRepo === rep.name });
-    if (repository === undefined) {
-        vscode.window.showErrorMessage('Could not find repository. Check that it still exists!');
-        return;
-    }
-    return repository;
-}
-
-
-/**
- * function to let user choose a registry for use
- * @returns a Registry object
- */
-async function getRegistry(): Promise<Registry> {
-    //first get desired registry
-    let registries = await AzureCredentialsManager.getInstance().getRegistries();
-    let reg: string[] = [];
-    for (let i = 0; i < registries.length; i++) {
-        reg.push(registries[i].name);
-    }
-    let desired = await vscode.window.showQuickPick(reg, { 'canPickMany': false, 'placeHolder': 'Choose the Registry from which your desired image exists' });
-    if (desired === undefined) return;
-    let registry = registries.find(reg => { return desired === reg.name });
-    return registry;
+    await azureUtils.request_data_from_registry('delete', registry.loginServer, path, username, password); //official call to delete the image
 }
