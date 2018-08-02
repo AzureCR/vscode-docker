@@ -4,6 +4,7 @@ import * as opn from 'opn';
 import request = require('request-promise');
 import * as vscode from 'vscode';
 import { AzureAccount, AzureSession } from '../../typings/azure-account.api';
+import * as acrTools from '../../utils/Azure/acrTools';
 import { AzureCredentialsManager } from '../../utils/AzureCredentialsManager';
 import { AzureImageNode, AzureRegistryNode, AzureRepositoryNode } from '../models/azureRegistryNodes';
 
@@ -22,18 +23,22 @@ export class Repository {
     public password?: string;
     public username?: string;
 
-    constructor(azureAccount: AzureAccount, registry: Registry, repository: string, subscription:
-        SubscriptionModels.Subscription, resourceGroupName: string, accessToken?: string, refreshToken?: string, password?: string, username?: string) {
-
-        this.azureAccount = azureAccount;
+    constructor(registry: Registry, repository: string, accessToken?: string, refreshToken?: string, password?: string, username?: string) {
         this.registry = registry;
+        this.resourceGroupName = registry.id.slice(registry.id.search('resourceGroups/') + 'resourceGroups/'.length, registry.id.search('/providers/'));
+        this.subscription = getSub(registry);
+        this.azureAccount = AzureCredentialsManager.getInstance().getAccount();
         this.name = repository;
-        this.subscription = subscription;
-        this.resourceGroupName = resourceGroupName;
         if (accessToken) { this.accessToken = accessToken; }
         if (refreshToken) { this.refreshToken = refreshToken; }
         if (password) { this.password = password; }
         if (username) { this.username = username; }
+    }
+
+    public async  setTokens(registry: Registry): Promise<void> {
+        let tokens = await acrTools.getTokens(registry);
+        this.accessToken = tokens.accessToken;
+        this.refreshToken = tokens.refreshToken;
     }
 }
 
@@ -53,19 +58,17 @@ export class AzureImage {
     public password?: string;
     public username?: string;
 
-    constructor(azureAccount: AzureAccount, registry: Registry, repository: Repository, tag: string, subscription:
-        SubscriptionModels.Subscription, resourceGroupName: string, accessToken?: string, refreshToken?: string, password?: string, username?: string) {
-
-        this.azureAccount = azureAccount;
-        this.registry = registry;
+    constructor(repository: Repository, tag: string) {
+        this.azureAccount = repository.azureAccount;
+        this.registry = repository.registry;
         this.repository = repository;
         this.tag = tag;
-        this.subscription = subscription;
-        this.resourceGroupName = resourceGroupName;
-        if (accessToken) { this.accessToken = accessToken; }
-        if (refreshToken) { this.refreshToken = refreshToken; }
-        if (password) { this.password = password; }
-        if (username) { this.username = username; }
+        this.subscription = repository.subscription;
+        this.resourceGroupName = repository.resourceGroupName;
+        if (repository.accessToken) { this.accessToken = repository.accessToken; }
+        if (repository.refreshToken) { this.refreshToken = repository.refreshToken; }
+        if (repository.password) { this.password = repository.password; }
+        if (repository.username) { this.username = repository.username; }
     }
 }
 
@@ -107,7 +110,7 @@ export function getSub(registry: Registry): SubscriptionModels.Subscription {
  */
 export async function request_data_from_registry(http_method: string, login_server: string, path: string, username: string, password: string): Promise<void> {
     let url: string = `https://${login_server}${path}`;
-    let header = AzureCredentialsManager.getInstance()._get_authorization_header(username, password);
+    let header = acrTools._get_authorization_header(username, password);
     let opt = {
         headers: { 'Authorization': header },
         http_method: http_method,
