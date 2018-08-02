@@ -48,6 +48,7 @@
     "onCommand:vscode-docker.createWebApp",
     "onCommand:vscode-docker.system.prune",
     "onCommand:vscode-docker.dockerHubLogout",
+    "onCommand:vscode-docker.deleteRepository",
     "onCommand:vscode-docker.browseDockerHub",
     "onCommand:vscode-docker.browseAzurePortal",
     "onCommand:vscode-docker.explorer.refresh",
@@ -254,6 +255,10 @@
         {
           "command": "vscode-docker.browseDockerHub",
           "when": "view == dockerExplorer && viewItem == dockerHubImageTag"
+        },
+        {
+          "command": "vscode-docker.deleteRepository",
+          "when": "view == dockerExplorer && viewItem == azureRepositoryNode"
         },
         {
           "command": "vscode-docker.browseDockerHub",
@@ -599,6 +604,11 @@
       {
         "command": "vscode-docker.dockerHubLogout",
         "title": "Docker Hub Logout",
+        "category": "Docker"
+      },
+      {
+        "command": "vscode-docker.deleteRepository",
+        "title": "Delete Repository",
         "category": "Docker"
       },
       {
