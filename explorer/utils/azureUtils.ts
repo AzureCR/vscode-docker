@@ -1,31 +1,30 @@
-import * as opn from 'opn';
-import { AzureRepositoryNode, AzureImageNode, AzureRegistryNode } from '../models/azureRegistryNodes';
-import { AzureAccount, AzureSession } from '../../typings/azure-account.api';
 import { Registry } from 'azure-arm-containerregistry/lib/models';
-import request = require('request-promise');
-import { AzureCredentialsManager } from '../../utils/AzureCredentialsManager';
 import { SubscriptionModels } from 'azure-arm-resource';
-
+import * as opn from 'opn';
+import request = require('request-promise');
+import { AzureAccount, AzureSession } from '../../typings/azure-account.api';
+import { AzureCredentialsManager } from '../../utils/AzureCredentialsManager';
+import { AzureImageNode, AzureRegistryNode, AzureRepositoryNode } from '../models/azureRegistryNodes';
 
 /**
  * class Repository: used locally as of August 2018, primarily for functions within azureUtils.ts and new commands such as delete Repository
  * accessToken can be used like a password, and the username can be '00000000-0000-0000-0000-000000000000'
  */
 export class Repository {
-    azureAccount: AzureAccount;
-    registry: Registry;
-    name: string;
-    subscription: SubscriptionModels.Subscription;
-    resourceGroupName: string;
-    accessToken?: string;
-    refreshToken?: string;
-    password?: string;
-    username?: string;
+    public azureAccount: AzureAccount;
+    public registry: Registry;
+    public name: string;
+    public subscription: SubscriptionModels.Subscription;
+    public resourceGroupName: string;
+    public accessToken?: string;
+    public refreshToken?: string;
+    public password?: string;
+    public username?: string;
 
-    constructor(AzureAccount: AzureAccount, registry: Registry, repository: string, subscription:
+    constructor(azureAccount: AzureAccount, registry: Registry, repository: string, subscription:
         SubscriptionModels.Subscription, resourceGroupName: string, accessToken?: string, refreshToken?: string, password?: string, username?: string) {
 
-        this.azureAccount = AzureAccount;
+        this.azureAccount = azureAccount;
         this.registry = registry;
         this.name = repository;
         this.subscription = subscription;
@@ -42,21 +41,21 @@ export class Repository {
  * accessToken can be used like a password, and the username can be '00000000-0000-0000-0000-000000000000'
  */
 export class AzureImage {
-    azureAccount: AzureAccount;
-    registry: Registry;
-    repository: Repository;
-    tag: string;
-    subscription: SubscriptionModels.Subscription;
-    resourceGroupName: string;
-    accessToken?: string;
-    refreshToken?: string;
-    password?: string;
-    username?: string;
+    public azureAccount: AzureAccount;
+    public registry: Registry;
+    public repository: Repository;
+    public tag: string;
+    public subscription: SubscriptionModels.Subscription;
+    public resourceGroupName: string;
+    public accessToken?: string;
+    public refreshToken?: string;
+    public password?: string;
+    public username?: string;
 
-    constructor(AzureAccount: AzureAccount, registry: Registry, repository: Repository, tag: string, subscription:
+    constructor(azureAccount: AzureAccount, registry: Registry, repository: Repository, tag: string, subscription:
         SubscriptionModels.Subscription, resourceGroupName: string, accessToken?: string, refreshToken?: string, password?: string, username?: string) {
 
-        this.azureAccount = AzureAccount;
+        this.azureAccount = azureAccount;
         this.registry = registry;
         this.repository = repository;
         this.tag = tag;
@@ -91,7 +90,7 @@ export function browseAzurePortal(context?: AzureRegistryNode | AzureRepositoryN
 export function getSub(registry: Registry): SubscriptionModels.Subscription {
     let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
     const subs = AzureCredentialsManager.getInstance().getFilteredSubscriptionList();
-    let subscription = subs.find(function (sub): boolean {
+    let subscription = subs.find((sub): boolean => {
         return sub.subscriptionId === subscriptionId;
     });
     return subscription;
