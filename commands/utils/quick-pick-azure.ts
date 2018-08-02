@@ -2,9 +2,10 @@ import { ContainerRegistryManagementClient } from 'azure-arm-containerregistry';
 import { Registry } from 'azure-arm-containerregistry/lib/models';
 import * as vscode from "vscode";
 import * as azureUtils from '../../explorer/utils/azureUtils';
-import { AzureImage, getSub, Repository } from '../../explorer/utils/azureUtils';
 import { AzureAccount, AzureSession } from '../../typings/azure-account.api';
 import * as acrTools from '../../utils/Azure/acrTools';
+import { AzureImage } from "../../utils/Azure/models/image";
+import { Repository } from "../../utils/Azure/models/Repository";
 import { AzureCredentialsManager } from '../../utils/azureCredentialsManager';
 
 /**
@@ -12,8 +13,8 @@ import { AzureCredentialsManager } from '../../utils/azureCredentialsManager';
  * @param repository the repository to look in
  * @returns an AzureImage object (see azureUtils.ts)
  */
-export async function getImage(repository: Repository): Promise<AzureImage> {
-    const repoImages: azureUtils.AzureImage[] = await acrTools.getImages(repository);
+export async function quickPickACRImage(repository: Repository): Promise<AzureImage> {
+    const repoImages: AzureImage[] = await acrTools.getImages(repository);
     console.log(repoImages);
     let imageList: string[] = [];
     for (let tempImage of repoImages) {
@@ -31,8 +32,8 @@ export async function getImage(repository: Repository): Promise<AzureImage> {
  * @param registry the registry to choose a repository from
  * @returns a Repository object (see azureUtils.ts)
  */
-export async function getRepository(registry: Registry): Promise<Repository> {
-    const myRepos: azureUtils.Repository[] = await acrTools.getAzureRepositories(registry);
+export async function quickPickACRRepository(registry: Registry): Promise<Repository> {
+    const myRepos: Repository[] = await acrTools.getAzureRepositories(registry);
     let rep: string[] = [];
     for (let repo of myRepos) {
         rep.push(repo.name);
@@ -51,7 +52,7 @@ export async function getRepository(registry: Registry): Promise<Repository> {
  * function to let user choose a registry for use
  * @returns a Registry object
  */
-export async function getRegistry(): Promise<Registry> {
+export async function quickPickACRRegistry(): Promise<Registry> {
     //first get desired registry
     let registries = await AzureCredentialsManager.getInstance().getRegistries();
     let reg: string[] = [];

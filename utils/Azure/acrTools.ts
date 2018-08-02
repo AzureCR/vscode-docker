@@ -3,9 +3,9 @@ import { SubscriptionModels } from 'azure-arm-resource';
 import request = require('request-promise');
 import * as vscode from "vscode";
 import { AzureImageNode, AzureRepositoryNode } from '../../explorer/models/AzureRegistryNodes';
-import * as azureUtils from '../../explorer/utils/azureUtils';
-import { AzureImage, getSub, Repository } from "../../explorer/utils/azureUtils";
 import { AzureAccount, AzureSession } from "../../typings/azure-account.api";
+import { AzureImage } from "../Azure/models/image";
+import { Repository } from "../Azure/models/Repository";
 import { AzureCredentialsManager } from '../azureCredentialsManager';
 const teleCmdId: string = 'vscode-docker.deleteAzureImage';
 
@@ -17,8 +17,6 @@ const teleCmdId: string = 'vscode-docker.deleteAzureImage';
 export async function getAzureRepositories(registry: Registry): Promise<Repository[]> {
     const allRepos: Repository[] = [];
     let repo: Repository;
-    let resourceGroup: string = registry.id.slice(registry.id.search('resourceGroups/') + 'resourceGroups/'.length, registry.id.search('/providers/'));
-    const subscription = getSub(registry);
     let azureAccount: AzureAccount = AzureCredentialsManager.getInstance().getAccount();
     if (!azureAccount) {
         return [];
@@ -234,4 +232,46 @@ export async function loginCredentials(subscription: SubscriptionModels.Subscrip
         username = '00000000-0000-0000-0000-000000000000';
     }
     return { password, username };
+}
+
+/**
+ *
+ * @param http_method : the http method, this function currently only uses delete
+ * @param login_server: the login server of the registry
+ * @param path : the URL path
+ * @param username : registry username, can be in generic form of 0's, used to generate authorization header
+ * @param password : registry password, can be in form of accessToken, used to generate authorization header
+ */
+export async function request_data_from_registry(http_method: string, login_server: string, path: string, username: string, password: string): Promise<void> {
+    let url: string = `https://${login_server}${path}`;
+    let header = _get_authorization_header(username, password);
+    let opt = {
+        headers: { 'Authorization': header },
+        http_method: http_method,
+        url: url
+    }
+    let err = false;
+    try {
+        let response = await request.delete(opt);
+    } catch (error) {
+        err = true;
+        console.log(error);
+    }
+    if (!err) {
+        vscode.window.showInformationMessage('Successfully deleted image');
+    }
+}
+
+/**
+ *
+ * @param registry gets the subscription for a given registry
+ * @returns a subscription object
+ */
+export function getSub(registry: Registry): SubscriptionModels.Subscription {
+    let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
+    const subs = AzureCredentialsManager.getInstance().getFilteredSubscriptionList();
+    let subscription = subs.find((sub): boolean => {
+        return sub.subscriptionId === subscriptionId;
+    });
+    return subscription;
 }

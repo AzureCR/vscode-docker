@@ -1,11 +1,8 @@
 import { Registry } from "azure-arm-containerregistry/lib/models";
 import { SubscriptionModels } from 'azure-arm-resource';
-import request = require('request-promise');
 import * as vscode from "vscode";
 import { AzureImageNode } from '../explorer/models/AzureRegistryNodes';
-import * as azureUtils from '../explorer/utils/azureUtils';
-import { AzureImage, getSub, Repository } from "../explorer/utils/azureUtils";
-import { AzureAccount } from "../typings/azure-account.api";
+import { Repository } from "../utils/Azure/models/repository";
 import { AzureCredentialsManager } from '../utils/azureCredentialsManager';
 const teleCmdId: string = 'vscode-docker.deleteAzureImage';
 import * as quickPicks from '../commands/utils/quick-pick-azure';
@@ -27,7 +24,7 @@ export async function deleteAzureImage(context?: AzureImageNode): Promise<void> 
     let tag: string;
     if (!context) {
         registry = await quickPicks.quickPickACRRegistry();
-        subscription = getSub(registry);
+        subscription = acrTools.getSub(registry);
         let repository: Repository = await quickPicks.quickPickACRRepository(registry);
         repoName = repository.name;
         const image = await quickPicks.quickPickACRImage(repository);
@@ -58,5 +55,5 @@ export async function deleteAzureImage(context?: AzureImageNode): Promise<void> 
     username = creds.username;
     password = creds.password;
     let path = `/v2/_acr/${repoName}/tags/${tag}`;
-    await azureUtils.request_data_from_registry('delete', registry.loginServer, path, username, password); //official call to delete the image
+    await acrTools.request_data_from_registry('delete', registry.loginServer, path, username, password); //official call to delete the image
 }
