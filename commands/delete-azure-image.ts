@@ -42,7 +42,8 @@ export async function deleteAzureImage(context?: AzureImageNode): Promise<void> 
         prompt: 'Are you sure you want to delete this image? Enter Yes to continue: '
     };
     let answer = await vscode.window.showInputBox(opt);
-    if (answer !== 'Yes') { return; }
+    answer = answer.toLowerCase();
+    if (answer !== 'yes') { return; }
 
     if (context) {
         repoName = context.label;
