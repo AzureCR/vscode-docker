@@ -1,12 +1,12 @@
 import { Registry } from "azure-arm-containerregistry/lib/models";
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as vscode from "vscode";
-import { AzureImageNode } from '../explorer/models/AzureRegistryNodes';
-import { Repository } from "../utils/Azure/models/repository";
-import { AzureCredentialsManager } from '../utils/azureCredentialsManager';
+import { AzureImageNode } from '../../explorer/models/AzureRegistryNodes';
+import { Repository } from "../../utils/Azure/models/repository";
+import { AzureCredentialsManager } from '../../utils/azureCredentialsManager';
 const teleCmdId: string = 'vscode-docker.deleteAzureImage';
-import * as quickPicks from '../commands/utils/quick-pick-azure';
-import * as acrTools from '../utils/Azure/acrTools';
+import * as quickPicks from '../../commands/utils/quick-pick-azure';
+import * as acrTools from '../../utils/Azure/acrTools';
 
 /**
  * function to delete an Azure repository and its associated images
@@ -15,6 +15,7 @@ import * as acrTools from '../utils/Azure/acrTools';
 export async function deleteAzureImage(context?: AzureImageNode): Promise<void> {
     if (!AzureCredentialsManager.getInstance().isLoggedIn()) {
         vscode.window.showErrorMessage('You are not logged into Azure');
+        return;
     }
     let registry: Registry;
     let subscription: SubscriptionModels.Subscription;
@@ -24,7 +25,7 @@ export async function deleteAzureImage(context?: AzureImageNode): Promise<void> 
     let tag: string;
     if (!context) {
         registry = await quickPicks.quickPickACRRegistry();
-        subscription = acrTools.getSub(registry);
+        subscription = acrTools.getRegistrySubscription(registry);
         let repository: Repository = await quickPicks.quickPickACRRepository(registry);
         repoName = repository.name;
         const image = await quickPicks.quickPickACRImage(repository);
@@ -55,5 +56,5 @@ export async function deleteAzureImage(context?: AzureImageNode): Promise<void> 
     username = creds.username;
     password = creds.password;
     let path = `/v2/_acr/${repoName}/tags/${tag}`;
-    await acrTools.request_data_from_registry('delete', registry.loginServer, path, username, password); //official call to delete the image
+    await acrTools.requestDataFromRegistry('delete', registry.loginServer, path, username, password); //official call to delete the image
 }

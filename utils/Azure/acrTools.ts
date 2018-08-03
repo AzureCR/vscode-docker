@@ -21,7 +21,7 @@ export async function getAzureRepositories(registry: Registry): Promise<Reposito
     if (!azureAccount) {
         return [];
     }
-    const { accessToken, refreshToken } = await getTokens(registry);
+    const { accessToken, refreshToken } = await getRegistryTokens(registry);
     if (accessToken && refreshToken) {
 
         await request.get('https://' + registry.loginServer + '/v2/_catalog', {
@@ -46,30 +46,29 @@ export async function getAzureRepositories(registry: Registry): Promise<Reposito
  * @param registry : the registry to get credentials for
  * @returns : the updated refresh and access tokens which can be used to generate a header for an API call
  */
-export async function getTokens(registry: Registry): Promise<{ refreshToken: any, accessToken: any }> {
-    const subscription = getSub(registry);
+export async function getRegistryTokens(registry: Registry): Promise<{ refreshToken: any, accessToken: any }> {
+    const subscription = getRegistrySubscription(registry);
     const tenantId: string = subscription.tenantId;
     let azureAccount: AzureAccount = AzureCredentialsManager.getInstance().getAccount();
 
     const session: AzureSession = azureAccount.sessions.find((s, i, array) => s.tenantId.toLowerCase() === tenantId.toLowerCase());
-    const { accessToken, refreshToken } = await acquireToken(session);
+    const { accessToken } = await acquireARMToken(session);
 
     //regenerates in case they have expired
-    if (accessToken && refreshToken) {
-        let refreshTokenARC;
-        let accessTokenARC;
+    if (accessToken) {
+        let refreshTokenACR;
+        let accessTokenACR;
 
         await request.post('https://' + registry.loginServer + '/oauth2/exchange', {
             form: {
-                grant_type: 'access_token_refresh_token',
+                grant_type: 'access_token',
                 service: registry.loginServer,
                 tenant: tenantId,
-                refresh_token: refreshToken,
                 access_token: accessToken
             }
         }, (err, httpResponse, body) => {
             if (body.length > 0) {
-                refreshTokenARC = JSON.parse(body).refresh_token;
+                refreshTokenACR = JSON.parse(body).refresh_token;
             } else {
                 return;
             }
@@ -80,34 +79,33 @@ export async function getTokens(registry: Registry): Promise<{ refreshToken: any
                 grant_type: 'refresh_token',
                 service: registry.loginServer,
                 scope: 'registry:catalog:*',
-                refresh_token: refreshTokenARC
+                refresh_token: refreshTokenACR
             }
         }, (err, httpResponse, body) => {
             if (body.length > 0) {
-                accessTokenARC = JSON.parse(body).access_token;
+                accessTokenACR = JSON.parse(body).access_token;
             } else {
                 return;
             }
         });
-        if (refreshTokenARC && accessTokenARC) {
-            return { 'refreshToken': refreshTokenARC, 'accessToken': accessTokenARC };
+        if (refreshTokenACR && accessTokenACR) {
+            return { 'refreshToken': refreshTokenACR, 'accessToken': accessTokenACR };
         }
     }
     vscode.window.showErrorMessage('Could not generate tokens');
 }
 
-export async function acquireToken(localSession: AzureSession): Promise<{ accessToken: string; refreshToken: string; }> {
-    return new Promise<{ accessToken: string; refreshToken: string; }>((resolve, reject) => {
+export async function acquireARMToken(localSession: AzureSession): Promise<{ accessToken: string; }> {
+    return new Promise<{ accessToken: string; }>((resolve, reject) => {
         const credentials: any = localSession.credentials;
         const environment: any = localSession.environment;
         // tslint:disable-next-line:no-function-expression // Grandfathered in
-        credentials.context.acquireToken(environment.activeDirectoryResourceId, credentials.username, credentials.clientId, function (err: any, result: { accessToken: string; refreshToken: string; }): void {
+        credentials.context.acquireToken(environment.activeDirectoryResourceId, credentials.username, credentials.clientId, function (err: any, result: { accessToken: string; }): void {
             if (err) {
                 reject(err);
             } else {
                 resolve({
-                    accessToken: result.accessToken,
-                    refreshToken: result.refreshToken
+                    accessToken: result.accessToken
                 });
             }
         });
@@ -118,7 +116,7 @@ export async function acquireToken(localSession: AzureSession): Promise<{ access
  *
  * function used to create header for http request to acr
  */
-export function _get_authorization_header(username: string, password: string): string {
+export function getAuthorizationHeader(username: string, password: string): string {
     let auth = ('Basic ' + (encode(username + ':' + password).trim()));
     return (auth);
 }
@@ -146,22 +144,21 @@ export async function getImages(element: Repository): Promise<AzureImage[]> {
     let tags;
     let azureAccount: AzureAccount = AzureCredentialsManager.getInstance().getAccount();
     let tenantId: string = element.subscription.tenantId;
-    let refreshTokenARC;
-    let accessTokenARC;
+    let refreshTokenACR;
+    let accessTokenACR;
     const session: AzureSession = azureAccount.sessions.find((s, i, array) => s.tenantId.toLowerCase() === tenantId.toLowerCase());
-    const { accessToken, refreshToken } = await acquireToken(session);
-    if (accessToken && refreshToken) {
+    const { accessToken } = await acquireARMToken(session);
+    if (accessToken) {
         await request.post('https://' + element.registry.loginServer + '/oauth2/exchange', {
             form: {
-                grant_type: 'access_token_refresh_token',
+                grant_type: 'access_token',
                 service: element.registry.loginServer,
                 tenant: tenantId,
-                refresh_token: refreshToken,
                 access_token: accessToken
             }
         }, (err, httpResponse, body) => {
             if (body.length > 0) {
-                refreshTokenARC = JSON.parse(body).refresh_token;
+                refreshTokenACR = JSON.parse(body).refresh_token;
             } else {
                 return [];
             }
@@ -172,11 +169,11 @@ export async function getImages(element: Repository): Promise<AzureImage[]> {
                 grant_type: 'refresh_token',
                 service: element.registry.loginServer,
                 scope: 'repository:' + element.name + ':pull',
-                refresh_token: refreshTokenARC
+                refresh_token: refreshTokenACR
             }
         }, (err, httpResponse, body) => {
             if (body.length > 0) {
-                accessTokenARC = JSON.parse(body).access_token;
+                accessTokenACR = JSON.parse(body).access_token;
             } else {
                 return [];
             }
@@ -184,7 +181,7 @@ export async function getImages(element: Repository): Promise<AzureImage[]> {
 
         await request.get('https://' + element.registry.loginServer + '/v2/' + element.name + '/tags/list', {
             auth: {
-                bearer: accessTokenARC
+                bearer: accessTokenACR
             }
         }, (err, httpResponse, body) => {
             if (err) { return []; }
@@ -227,7 +224,7 @@ export async function loginCredentials(subscription: SubscriptionModels.Subscrip
         username = creds.username;
     } else {
         //grab the access token to be used as a password, and a generic username
-        let creds = await getTokens(registry);
+        let creds = await getRegistryTokens(registry);
         password = creds.accessToken;
         username = '00000000-0000-0000-0000-000000000000';
     }
@@ -242,24 +239,20 @@ export async function loginCredentials(subscription: SubscriptionModels.Subscrip
  * @param username : registry username, can be in generic form of 0's, used to generate authorization header
  * @param password : registry password, can be in form of accessToken, used to generate authorization header
  */
-export async function request_data_from_registry(http_method: string, login_server: string, path: string, username: string, password: string): Promise<void> {
+export async function requestDataFromRegistry(http_method: string, login_server: string, path: string, username: string, password: string): Promise<void> {
     let url: string = `https://${login_server}${path}`;
-    let header = _get_authorization_header(username, password);
+    let header = getAuthorizationHeader(username, password);
     let opt = {
         headers: { 'Authorization': header },
         http_method: http_method,
         url: url
     }
-    let err = false;
     try {
-        let response = await request.delete(opt);
+        await request.delete(opt);
     } catch (error) {
-        err = true;
-        console.log(error);
+        throw error;
     }
-    if (!err) {
-        vscode.window.showInformationMessage('Successfully deleted image');
-    }
+    vscode.window.showInformationMessage('Successfully deleted image');
 }
 
 /**
@@ -267,7 +260,7 @@ export async function request_data_from_registry(http_method: string, login_serv
  * @param registry gets the subscription for a given registry
  * @returns a subscription object
  */
-export function getSub(registry: Registry): SubscriptionModels.Subscription {
+export function getRegistrySubscription(registry: Registry): SubscriptionModels.Subscription {
     let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
     const subs = AzureCredentialsManager.getInstance().getFilteredSubscriptionList();
     let subscription = subs.find((sub): boolean => {
