@@ -8,7 +8,6 @@ import { AzureCredentialsManager } from '../../AzureCredentialsManager';
  * accessToken can be used like a password, and the username can be '00000000-0000-0000-0000-000000000000'
  */
 export class Repository {
-    public azureAccount: AzureAccount;
     public registry: Registry;
     public name: string;
     public subscription: SubscriptionModels.Subscription;
@@ -21,8 +20,7 @@ export class Repository {
     constructor(registry: Registry, repository: string, accessToken?: string, refreshToken?: string, password?: string, username?: string) {
         this.registry = registry;
         this.resourceGroupName = registry.id.slice(registry.id.search('resourceGroups/') + 'resourceGroups/'.length, registry.id.search('/providers/'));
-        this.subscription = acrTools.getSub(registry);
-        this.azureAccount = AzureCredentialsManager.getInstance().getAccount();
+        this.subscription = acrTools.getRegistrySubscription(registry);
         this.name = repository;
         if (accessToken) { this.accessToken = accessToken; }
         if (refreshToken) { this.refreshToken = refreshToken; }
@@ -31,7 +29,7 @@ export class Repository {
     }
 
     public async  setTokens(registry: Registry): Promise<void> {
-        let tokens = await acrTools.getTokens(registry);
+        let tokens = await acrTools.getRegistryTokens(registry);
         this.accessToken = tokens.accessToken;
         this.refreshToken = tokens.refreshToken;
     }

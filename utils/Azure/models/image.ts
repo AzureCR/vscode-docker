@@ -8,7 +8,6 @@ import { Repository } from '../models/repository';
  * accessToken can be used like a password, and the username can be '00000000-0000-0000-0000-000000000000'
  */
 export class AzureImage {
-    public azureAccount: AzureAccount;
     public registry: Registry;
     public repository: Repository;
     public tag: string;
@@ -20,7 +19,6 @@ export class AzureImage {
     public username?: string;
 
     constructor(repository: Repository, tag: string) {
-        this.azureAccount = repository.azureAccount;
         this.registry = repository.registry;
         this.repository = repository;
         this.tag = tag;

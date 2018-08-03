@@ -117,7 +117,14 @@ export async function acquireARMToken(localSession: AzureSession): Promise<{ acc
  * function used to create header for http request to acr
  */
 export function getAuthorizationHeader(username: string, password: string): string {
-    let auth = ('Basic ' + (encode(username + ':' + password).trim()));
+    let auth;
+    if (username === '00000000-0000-0000-0000-000000000000') {
+        auth = {
+            bearer: password
+        }
+    } else {
+        auth = ('Basic ' + (encode(username + ':' + password).trim()));
+    }
     return (auth);
 }
 
@@ -138,7 +145,7 @@ export function encode(str: string): string {
  * @param element the repository where the desired images are
  * @returns a list of AzureImage objects from the given repository (see azureUtils.ts)
  */
-export async function getImages(element: Repository): Promise<AzureImage[]> {
+export async function getAzureImages(element: Repository): Promise<AzureImage[]> {
     let allImages: AzureImage[] = [];
     let image: AzureImage;
     let tags;
