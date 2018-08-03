@@ -119,13 +119,11 @@ export async function acquireARMToken(localSession: AzureSession): Promise<{ acc
 export function getAuthorizationHeader(username: string, password: string): string {
     let auth;
     if (username === '00000000-0000-0000-0000-000000000000') {
-        auth = {
-            bearer: password
-        }
+        auth = 'Bearer ' + password;
     } else {
         auth = ('Basic ' + (encode(username + ':' + password).trim()));
     }
-    return (auth);
+    return auth;
 }
 
 /**
