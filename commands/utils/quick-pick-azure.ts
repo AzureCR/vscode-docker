@@ -18,9 +18,8 @@ export async function quickPickACRImage(repository: Repository): Promise<AzureIm
         imageListNames.push(tempImage.tag);
     }
     let desiredImage = await vscode.window.showQuickPick(imageListNames, { 'canPickMany': false, 'placeHolder': 'Choose the image you want to delete' });
-    if (desiredImage === undefined) { return; }
+    if (!desiredImage) { return; }
     const image = repoImages.find((myImage): boolean => { return desiredImage === myImage.tag });
-    if (image === undefined) { return; }
     return image;
 }
 
@@ -36,12 +35,8 @@ export async function quickPickACRRepository(registry: Registry): Promise<Reposi
         rep.push(repo.name);
     }
     let desiredRepo = await vscode.window.showQuickPick(rep, { 'canPickMany': false, 'placeHolder': 'Choose the repository from which your desired image exists' });
-    if (desiredRepo === undefined) { return; }
+    if (!desiredRepo) { return; }
     const repository = myRepos.find((currentRepo): boolean => { return desiredRepo === currentRepo.name });
-    if (repository === undefined) {
-        vscode.window.showErrorMessage('Could not find repository. Check that it still exists!');
-        return;
-    }
     return repository;
 }
 
@@ -57,7 +52,7 @@ export async function quickPickACRRegistry(): Promise<Registry> {
         reg.push(registryName.name);
     }
     let desired = await vscode.window.showQuickPick(reg, { 'canPickMany': false, 'placeHolder': 'Choose the Registry from which your desired image exists' });
-    if (desired === undefined) { return; }
+    if (!desired) { return; }
     const registry = registries.find((currentReg): boolean => { return desired === currentReg.name });
     return registry;
 }

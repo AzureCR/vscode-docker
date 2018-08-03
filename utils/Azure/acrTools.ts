@@ -246,7 +246,7 @@ export async function loginCredentials(subscription: SubscriptionModels.Subscrip
  * @param username : registry username, can be in generic form of 0's, used to generate authorization header
  * @param password : registry password, can be in form of accessToken, used to generate authorization header
  */
-export async function requestDataFromRegistry(http_method: string, login_server: string, path: string, username: string, password: string): Promise<void> {
+export async function sendRequestToRegistry(http_method: string, login_server: string, path: string, username: string, password: string): Promise<void> {
     let url: string = `https://${login_server}${path}`;
     let header = getAuthorizationHeader(username, password);
     let opt = {
