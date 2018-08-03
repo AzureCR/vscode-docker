@@ -79,9 +79,10 @@ export class AzureCredentialsManager {
             const subs: SubscriptionModels.Subscription[] = this.getFilteredSubscriptionList();
             const subPool = new AsyncPool(MAX_CONCURRENT_SUBSCRIPTON_REQUESTS);
 
-            for (let regSubscription of subs) {
+            for (let sub of subs) {
                 subPool.addTask(async () => {
-                    const client = this.getContainerRegistryManagementClient(regSubscription);
+                    const client = this.getContainerRegistryManagementClient(sub);
+
                     let subscriptionRegistries: ContainerModels.Registry[] = await client.registries.list();
                     registries = registries.concat(subscriptionRegistries);
                 });
@@ -103,6 +104,7 @@ export class AzureCredentialsManager {
         const subPool = new AsyncPool(MAX_CONCURRENT_SUBSCRIPTON_REQUESTS);
         let resourceGroups: ResourceGroup[] = [];
         //Acquire each subscription's data simultaneously
+
         for (let tempSub of subs) {
             subPool.addTask(async () => {
                 const resourceClient = this.getResourceManagementClient(tempSub);
@@ -120,6 +122,13 @@ export class AzureCredentialsManager {
             return session.credentials;
         }
         throw new Error(`Failed to get credentials, tenant ${tenantId} not found.`);
+    }
+
+    public async getLocationsBySubscription(subscription: SubscriptionModels.Subscription): Promise<SubscriptionModels.Location[]> {
+        const credential = this.getCredentialByTenantId(subscription.tenantId);
+        const client = new SubscriptionClient(credential);
+        const locations = <SubscriptionModels.Location[]>(await client.subscriptions.listLocations(subscription.subscriptionId));
+        return locations;
     }
 
     //CHECKS
