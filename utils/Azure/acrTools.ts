@@ -257,7 +257,7 @@ export async function sendRequestToRegistry(http_method: string, login_server: s
     } catch (error) {
         throw error;
     }
-    vscode.window.showInformationMessage('Successfully deleted image');
+    vscode.window.showInformationMessage('Successfully deleted item');
 }
 
 /**

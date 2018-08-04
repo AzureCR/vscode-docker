@@ -3,7 +3,6 @@ import { SubscriptionModels } from 'azure-arm-resource';
 import request = require('request-promise');
 import * as vscode from "vscode";
 import { AzureRepositoryNode } from '../../explorer/models/AzureRegistryNodes';
-import { AzureCredentialsManager } from '../../utils/AzureCredentialsManager';
 const teleCmdId: string = 'vscode-docker.deleteRepository';
 import * as quickPicks from '../../commands/utils/quick-pick-azure';
 import * as acrTools from '../../utils/Azure/acrTools';
@@ -15,14 +14,6 @@ import { Repository } from "../../utils/Azure/models/repository";
  */
 export async function deleteRepository(context?: AzureRepositoryNode): Promise<void> {
 
-    let azureAccount = await AzureCredentialsManager.getInstance().getAccount();
-    if (!azureAccount) {
-        return;
-    }
-
-    if (azureAccount.status === 'LoggedOut') {
-        return;
-    }
     let registry: Registry;
     let subscription: SubscriptionModels.Subscription;
     let repoName: string;
@@ -40,11 +31,11 @@ export async function deleteRepository(context?: AzureRepositoryNode): Promise<v
         ignoreFocusOut: true,
         placeHolder: 'No',
         value: 'No',
-        prompt: 'Are you sure you want to delete this repository and its associated images? Enter Yes or No: '
+        prompt: 'Are you sure you want to delete this repository and its associated images? Enter Yes to continue: '
     };
     let answer = await vscode.window.showInputBox(opt);
     answer = answer.toLowerCase();
-    if (answer !== 'Yes') { return; }
+    if (answer !== 'yes') { return; }
 
     // generate credentials before requesting a delete.
     if (context) {
