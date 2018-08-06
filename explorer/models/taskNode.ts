@@ -6,7 +6,7 @@ import { AzureAccount, AzureSession } from '../../typings/azure-account.api';
 import { AzureCredentialsManager } from '../../utils/azureCredentialsManager';
 import { NodeBase } from './nodeBase';
 
-/*Single TaskRootNode under each Repository. Labeled "Build Tasks" */
+/* Single TaskRootNode under each Repository. Labeled "Build Tasks" */
 export class TaskRootNode extends NodeBase {
     constructor(
         public readonly label: string,
@@ -30,7 +30,7 @@ export class TaskRootNode extends NodeBase {
         }
     }
 
-    /*Making a list view of BuildTaskNodes, or the Build Tasks of the current registry */
+    /* Making a list view of BuildTaskNodes, or the Build Tasks of the current registry */
     public async getChildren(element: TaskRootNode): Promise<BuildTaskNode[]> {
         const buildTaskNodes: BuildTaskNode[] = [];
         let buildTasks: ContainerModels.BuildTask[] = [];

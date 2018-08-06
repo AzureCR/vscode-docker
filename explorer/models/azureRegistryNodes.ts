@@ -300,7 +300,7 @@ export class AzureLoadingNode extends NodeBase {
     }
 }
 
-async function acquireToken(session: AzureSession): Promise<any> {
+async function acquireToken(session: AzureSession): Promise<{ accessToken: string; refreshToken: string; }> {
     return new Promise<{ accessToken: string; refreshToken: string; }>((resolve, reject) => {
         const credentials: any = session.credentials;
         const environment: any = session.environment;

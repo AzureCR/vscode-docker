@@ -69,11 +69,9 @@ export class RootNode extends NodeBase {
                 if (this._imageCache.length !== images.length) {
                     needToRefresh = true;
                 } else {
-                    for (let imageCache of this._imageCache) {
-                        let before: string = JSON.stringify(imageCache);
+                    for (let cachedImage of this._imageCache) {
                         for (let image of images) {
-                            let after: string = JSON.stringify(image);
-                            if (before === after) {
+                            if (image === cachedImage) {
                                 found = true;
                                 break;
                             }
@@ -106,16 +104,20 @@ export class RootNode extends NodeBase {
     }
 
     public async getChildren(element: RootNode): Promise<NodeBase[]> {
-        if (element.contextValue === 'imagesRootNode') {
-            return this.getImages();
+        switch (element.contextValue) {
+            case 'imagesRootNode': {
+                return this.getImages();
+            }
+            case 'containersRootNode': {
+                return this.getContainers();
+            }
+            case 'registriesRootNode': {
+                return this.getRegistries();
+            }
+            default: {
+                break;
+            }
         }
-        if (element.contextValue === 'containersRootNode') {
-            return this.getContainers();
-        }
-        if (element.contextValue === 'registriesRootNode') {
-            return this.getRegistries();
-        }
-
     }
 
     private async getImages(): Promise<ImageNode[]> {
@@ -177,8 +179,8 @@ export class RootNode extends NodeBase {
                 if (this._containerCache.length !== containers.length) {
                     needToRefresh = true;
                 } else {
-                    for (let containerCache of this._containerCache) {
-                        let ctr: Docker.ContainerDesc = containerCache;
+                    for (let cachedContainer of this._containerCache) {
+                        let ctr: Docker.ContainerDesc = cachedContainer;
                         for (let cont of containers) {
                             // can't do a full object compare because "Status" keeps changing for running containers
                             if (ctr.Id === cont.Id &&
