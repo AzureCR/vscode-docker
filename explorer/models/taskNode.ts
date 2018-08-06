@@ -42,7 +42,7 @@ export class TaskRootNode extends NodeBase {
         if (buildTasks.length === 0) {
             vscode.window.showErrorMessage(`You do not have any Build Tasks in '${element.registry.name}'. You can create one with ACR Build. `, "Learn More").then(val => {
                 if (val === "Learn More") {
-                    opn('https://docs.microsoft.com/en-us/azure/container-registry/container-registry-tutorial-build-task');
+                    opn('https://aka.ms/acr/buildtask');
                 }
             })
         }
