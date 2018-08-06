@@ -40,7 +40,7 @@ export class TaskRootNode extends NodeBase {
 
         buildTasks = await client.buildTasks.list(resourceGroup, element.registry.name);
         if (buildTasks.length === 0) {
-            vscode.window.showErrorMessage(`You do not have any Build Tasks in '${element.registry.name}'. You can create one with ACR Build. `, "Learn More").then(val => {
+            vscode.window.showInformationMessage(`You do not have any Build Tasks in the registry, '${element.registry.name}'. You can create one with ACR Build. `, "Learn More").then(val => {
                 if (val === "Learn More") {
                     opn('https://aka.ms/acr/buildtask');
                 }
