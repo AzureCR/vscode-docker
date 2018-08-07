@@ -3,6 +3,7 @@ import * as opn from 'opn';
 import * as vscode from 'vscode';
 import * as ContainerModels from '../../node_modules/azure-arm-containerregistry/lib/models';
 import { AzureAccount, AzureSession } from '../../typings/azure-account.api';
+import * as acrTools from '../../utils/Azure/acrTools';
 import { AzureCredentialsManager } from '../../utils/azureCredentialsManager';
 import { NodeBase } from './nodeBase';
 
@@ -36,7 +37,7 @@ export class TaskRootNode extends NodeBase {
         let buildTasks: ContainerModels.BuildTask[] = [];
 
         const client = AzureCredentialsManager.getInstance().getContainerRegistryManagementClient(element.subscription);
-        const resourceGroup: string = element.registry.id.slice(element.registry.id.search('resourceGroups/') + 'resourceGroups/'.length, element.registry.id.search('/providers/'));
+        const resourceGroup: string = acrTools.getResourceGroup(element.registry);
 
         buildTasks = await client.buildTasks.list(resourceGroup, element.registry.name);
         if (buildTasks.length === 0) {
