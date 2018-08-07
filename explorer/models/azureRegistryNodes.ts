@@ -43,8 +43,8 @@ export class AzureRegistryNode extends NodeBase {
         const registryChildNodes: NodeBase[] = [];
 
         let iconPath = {
-            light: path.join(__filename, '..', '..', '..', '..', 'images', 'light', 'wrench.png'),
-            dark: path.join(__filename, '..', '..', '..', '..', 'images', 'dark', 'wrench.png')
+            light: path.join(__filename, '..', '..', '..', '..', 'images', 'light', 'buildTasks_light.svg'),
+            dark: path.join(__filename, '..', '..', '..', '..', 'images', 'dark', 'buildTasks_dark.svg')
         };
 
         //Pushing single TaskRootNode under the current registry. All the following nodes added to registryNodes are type AzureRepositoryNode
