@@ -52,8 +52,8 @@
     "onCommand:vscode-docker.browseDockerHub",
     "onCommand:vscode-docker.browseAzurePortal",
     "onCommand:vscode-docker.explorer.refresh",
-    "onCommand:vscode-docker.deleteRepository",
-    "onCommand:vscode-docker.deleteAzureImage",
+    "onCommand:vscode-docker.deleteACRRepository",
+    "onCommand:vscode-docker.deleteACRImage",
     "onView:dockerExplorer",
     "onDebugInitialConfigurations"
   ],

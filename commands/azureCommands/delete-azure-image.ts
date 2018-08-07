@@ -6,7 +6,7 @@ import { AzureImageNode } from '../../explorer/models/AzureRegistryNodes';
 import * as acrTools from '../../utils/Azure/acrTools';
 import { Repository } from "../../utils/Azure/models/repository";
 import { AzureUtilityManager } from '../../utils/azureUtilityManager';
-const teleCmdId: string = 'vscode-docker.deleteAzureImage';
+const teleCmdId: string = 'vscode-docker.deleteACRImage';
 
 /** Function to delete an Azure repository and its associated images
  * @param context : if called through right click on AzureRepositoryNode, the node object will be passed in. See azureRegistryNodes.ts for more info

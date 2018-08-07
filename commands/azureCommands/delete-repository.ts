@@ -2,12 +2,11 @@ import { Registry } from "azure-arm-containerregistry/lib/models";
 import { SubscriptionModels } from 'azure-arm-resource';
 import request = require('request-promise');
 import * as vscode from "vscode";
-import { AzureRepositoryNode } from '../../explorer/models/AzureRegistryNodes';
-const teleCmdId: string = 'vscode-docker.deleteRepository';
 import * as quickPicks from '../../commands/utils/quick-pick-azure';
+import { AzureRepositoryNode } from '../../explorer/models/AzureRegistryNodes';
 import * as acrTools from '../../utils/Azure/acrTools';
 import { Repository } from "../../utils/Azure/models/repository";
-
+const teleCmdId: string = 'vscode-docker.deleteACRRepository';
 /**
  * function to delete an Azure repository and its associated images
  * @param context : if called through right click on AzureRepositoryNode, the node object will be passed in. See azureRegistryNodes.ts for more info

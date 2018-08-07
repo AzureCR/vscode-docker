@@ -154,8 +154,8 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     ctx.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('docker', new DockerDebugConfigProvider()));
 
     if (azureAccount) {
-        registerCommand('vscode-docker.deleteAzureImage', deleteAzureImage);
-        registerCommand('vscode-docker.deleteAzureImage', deleteAzureImage);
+        registerCommand('vscode-docker.deleteACRImage', deleteAzureImage);
+        registerCommand('vscode-docker.deleteACRRepository', deleteAzureImage);
         registerCommand('vscode-docker.createRegistry', createRegistry);
         AzureUtilityManager.getInstance().setAccount(azureAccount);
     }
