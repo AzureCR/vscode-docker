@@ -25,7 +25,7 @@ export async function deleteRepository(context?: AzureRepositoryNode): Promise<v
         repoName = repository.name;
     }
 
-    //ensure user truly wants to delete registry
+    // ensure user truly wants to delete registry
     let opt: vscode.InputBoxOptions = {
         ignoreFocusOut: true,
         placeHolder: 'No',
@@ -43,7 +43,7 @@ export async function deleteRepository(context?: AzureRepositoryNode): Promise<v
         repoName = context.label;
         subscription = context.subscription;
         registry = context.registry;
-    } else { //this is separated from !context above so it only calls loginCredentials once user has assured they want to delete the repository
+    } else { // this is separated from !context above so it only calls loginCredentials once user has assured they want to delete the repository
         let creds = await acrTools.loginCredentials(subscription, registry);
         username = creds.username;
         password = creds.password;
