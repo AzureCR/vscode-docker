@@ -1,30 +1,30 @@
 import { ContainerRegistryManagementClient } from 'azure-arm-containerregistry';
-import { Registry } from 'azure-arm-containerregistry/lib/models';
 import { ResourceManagementClient, SubscriptionClient, SubscriptionModels } from 'azure-arm-resource';
-import { ResourceGroup, ResourceGroupListResult } from "azure-arm-resource/lib/resource/models";
+import { ResourceGroup } from "azure-arm-resource/lib/resource/models";
 import { ServiceClientCredentials } from 'ms-rest';
 import * as ContainerModels from '../node_modules/azure-arm-containerregistry/lib/models';
-import { AzureAccount, AzureSession } from '../typings/azure-account.api';
+import { AzureAccount } from '../typings/azure-account.api';
 import { AsyncPool } from '../utils/asyncpool';
 import { MAX_CONCURRENT_SUBSCRIPTON_REQUESTS } from './constants';
+
 /* Singleton for facilitating communication with Azure account services by providing extended shared
   functionality and extension wide access to azureAccount. Tool for internal use.
-  Authors: Esteban Rey L, Jackson Stokes, Julia Lieberman
+  Authors: Esteban Rey L, Jackson Stokes
 */
 
-export class AzureCredentialsManager {
+export class AzureUtilityManager {
 
     //SETUP
-    private static _instance: AzureCredentialsManager;
+    private static _instance: AzureUtilityManager;
     private azureAccount: AzureAccount;
 
     private constructor() { }
 
-    public static getInstance(): AzureCredentialsManager {
-        if (!AzureCredentialsManager._instance) { // lazy initialization
-            AzureCredentialsManager._instance = new AzureCredentialsManager();
+    public static getInstance(): AzureUtilityManager {
+        if (!AzureUtilityManager._instance) { // lazy initialization
+            AzureUtilityManager._instance = new AzureUtilityManager();
         }
-        return AzureCredentialsManager._instance;
+        return AzureUtilityManager._instance;
     }
 
     //This function has to be called explicitly before using the singleton.
@@ -35,14 +35,13 @@ export class AzureCredentialsManager {
     //GETTERS
     public getAccount(): AzureAccount {
         if (this.azureAccount) { return this.azureAccount; }
-        throw new Error(('Azure account is not present, you may have forgotten to call setAccount'));
+        throw new Error('Azure account is not present, you may have forgotten to call setAccount');
     }
 
     public getFilteredSubscriptionList(): SubscriptionModels.Subscription[] {
         return this.getAccount().filters.map<SubscriptionModels.Subscription>(filter => {
             return {
                 id: filter.subscription.id,
-                session: filter.session,
                 subscriptionId: filter.subscription.subscriptionId,
                 tenantId: filter.session.tenantId,
                 displayName: filter.subscription.displayName,
@@ -61,7 +60,7 @@ export class AzureCredentialsManager {
         return new ResourceManagementClient(this.getCredentialByTenantId(subscription.tenantId), subscription.subscriptionId);
     }
 
-    public async getRegistries(subscription?: SubscriptionModels.Subscription, resourceGroup?: string, sortFunction?: any): Promise<ContainerModels.Registry[]> {
+    public async getRegistries(subscription?: SubscriptionModels.Subscription, resourceGroup?: string, sortFunction?: (a: ContainerModels.Registry, b: ContainerModels.Registry) => number): Promise<ContainerModels.Registry[]> {
         let registries: ContainerModels.Registry[] = [];
 
         if (subscription && resourceGroup) {
@@ -82,16 +81,17 @@ export class AzureCredentialsManager {
             for (let sub of subs) {
                 subPool.addTask(async () => {
                     const client = this.getContainerRegistryManagementClient(sub);
-
                     let subscriptionRegistries: ContainerModels.Registry[] = await client.registries.list();
                     registries = registries.concat(subscriptionRegistries);
                 });
             }
             await subPool.runAll();
         }
+
         if (sortFunction && registries.length > 1) {
             registries.sort(sortFunction);
         }
+
         return registries;
     }
 
@@ -100,14 +100,13 @@ export class AzureCredentialsManager {
             const resourceClient = this.getResourceManagementClient(subscription);
             return await resourceClient.resourceGroups.list();
         }
-        const subs: SubscriptionModels.Subscription[] = this.getFilteredSubscriptionList();
+        const subs = this.getFilteredSubscriptionList();
         const subPool = new AsyncPool(MAX_CONCURRENT_SUBSCRIPTON_REQUESTS);
         let resourceGroups: ResourceGroup[] = [];
         //Acquire each subscription's data simultaneously
-
-        for (let tempSub of subs) {
+        for (let sub of subs) {
             subPool.addTask(async () => {
-                const resourceClient = this.getResourceManagementClient(tempSub);
+                const resourceClient = this.getResourceManagementClient(sub);
                 const internalGroups = await resourceClient.resourceGroups.list();
                 resourceGroups = resourceGroups.concat(internalGroups);
             });
@@ -117,10 +116,13 @@ export class AzureCredentialsManager {
     }
 
     public getCredentialByTenantId(tenantId: string): ServiceClientCredentials {
+
         const session = this.getAccount().sessions.find((azureSession) => azureSession.tenantId.toLowerCase() === tenantId.toLowerCase());
+
         if (session) {
             return session.credentials;
         }
+
         throw new Error(`Failed to get credentials, tenant ${tenantId} not found.`);
     }
 
@@ -133,7 +135,7 @@ export class AzureCredentialsManager {
 
     //CHECKS
     //Provides a unified check for login that should be called once before using the rest of the singletons capabilities
-    public async isLoggedIn(): Promise<boolean> {
+    public async waitForLogin(): Promise<boolean> {
         if (!this.azureAccount) {
             return false;
         }

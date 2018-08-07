@@ -5,8 +5,9 @@
 import * as opn from 'opn';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzureUserInput } from 'vscode-azureextensionui';
+import { AzureUserInput, createTelemetryReporter, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { ConfigurationParams, DidChangeConfigurationNotification, DocumentSelector, LanguageClient, LanguageClientOptions, Middleware, ServerOptions, TransportKind } from 'vscode-languageclient';
+import { createRegistry } from './commands/azureCommands/create-registry';
 import { deleteAzureImage } from './commands/azureCommands/delete-azure-image';
 import { buildImage } from './commands/build-image';
 import { composeDown, composeRestart, composeUp } from './commands/docker-compose';
@@ -26,7 +27,6 @@ import { DockerDebugConfigProvider } from './configureWorkspace/configDebugProvi
 import { configure } from './configureWorkspace/configure';
 import { DockerComposeCompletionItemProvider } from './dockerCompose/dockerComposeCompletionItemProvider';
 import { DockerComposeHoverProvider } from './dockerCompose/dockerComposeHoverProvider';
-import { createRegistry } from './commands/azureCommands/create-registry';
 import composeVersionKeys from './dockerCompose/dockerComposeKeyInfo';
 import { DockerComposeParser } from './dockerCompose/dockerComposeParser';
 import { DockerfileCompletionItemProvider } from './dockerfile/dockerfileCompletionItemProvider';
@@ -40,9 +40,9 @@ import { DockerHubImageNode, DockerHubOrgNode, DockerHubRepositoryNode } from '.
 import { browseAzurePortal } from './explorer/utils/azureUtils';
 import { browseDockerHub, dockerHubLogout } from './explorer/utils/dockerHubUtils';
 import { ext } from "./extensionVariables";
-import { Reporter } from './telemetry/telemetry';
+import { initializeTelemetryReporter, reporter } from './telemetry/telemetry';
 import { AzureAccount } from './typings/azure-account.api';
-import { AzureCredentialsManager } from './utils/azureCredentialsManager';
+import { AzureUtilityManager } from './utils/azureUtilityManager';
 
 export const FROM_DIRECTIVE_PATTERN = /^\s*FROM\s*([\w-\/:]*)(\s*AS\s*[a-z][a-z0-9-_\\.]*)?$/i;
 export const COMPOSE_FILE_GLOB_PATTERN = '**/[dD]ocker-[cC]ompose*.{yaml,yml}';
@@ -69,8 +69,16 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     const outputChannel = util.getOutputChannel();
     let azureAccount: AzureAccount;
 
-    // This allows for standard interactions with the end user (as opposed to test input)
-    ext.ui = new AzureUserInput(ctx.globalState);
+    // Set up extension variables
+    if (!ext.ui) {
+        // This allows for standard interactions with the end user (as opposed to test input)
+        ext.ui = new AzureUserInput(ctx.globalState);
+    }
+    ext.context = ctx;
+    registerUIExtensionVariables(ext);
+
+    initializeTelemetryReporter(createTelemetryReporter(ctx));
+    ext.reporter = reporter;
 
     // tslint:disable-next-line:prefer-for-of // Grandfathered in
     for (let i = 0; i < installedExtensions.length; i++) {
@@ -85,11 +93,9 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
         }
     }
 
-    ctx.subscriptions.push(new Reporter(ctx));
-
     dockerExplorerProvider = new DockerExplorerProvider(azureAccount);
     vscode.window.registerTreeDataProvider('dockerExplorer', dockerExplorerProvider);
-    vscode.commands.registerCommand('vscode-docker.explorer.refresh', () => dockerExplorerProvider.refresh());
+    registerCommand('vscode-docker.explorer.refresh', () => dockerExplorerProvider.refresh());
 
     ctx.subscriptions.push(vscode.languages.registerCompletionItemProvider(DOCUMENT_SELECTOR, new DockerfileCompletionItemProvider(), '.'));
 
@@ -100,28 +106,26 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
 
     ctx.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(DOCKER_INSPECT_SCHEME, new DockerInspectDocumentContentProvider()));
 
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.configure', configure));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.image.build', buildImage));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.image.inspect', inspectImage));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.image.remove', removeImage));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.image.push', pushImage));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.image.tag', tagImage));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.container.start', startContainer));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.container.start.interactive', startContainerInteractive));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.container.start.azurecli', startAzureCLI));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.container.stop', stopContainer));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.container.restart', restartContainer));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.container.show-logs', showLogsContainer));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.container.open-shell', openShellContainer));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.container.remove', removeContainer));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.compose.up', composeUp));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.compose.down', composeDown));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.compose.restart', composeRestart));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.system.prune', systemPrune));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.deleteAzureImage', deleteAzureImage));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.createRegistry', createRegistry));
+    registerCommand('vscode-docker.configure', configure);
+    registerCommand('vscode-docker.image.build', buildImage);
+    registerCommand('vscode-docker.image.inspect', inspectImage);
+    registerCommand('vscode-docker.image.remove', removeImage);
+    registerCommand('vscode-docker.image.push', pushImage);
+    registerCommand('vscode-docker.image.tag', tagImage);
+    registerCommand('vscode-docker.container.start', startContainer);
+    registerCommand('vscode-docker.container.start.interactive', startContainerInteractive);
+    registerCommand('vscode-docker.container.start.azurecli', startAzureCLI);
+    registerCommand('vscode-docker.container.stop', stopContainer);
+    registerCommand('vscode-docker.container.restart', restartContainer);
+    registerCommand('vscode-docker.container.show-logs', showLogsContainer);
+    registerCommand('vscode-docker.container.open-shell', openShellContainer);
+    registerCommand('vscode-docker.container.remove', removeContainer);
+    registerCommand('vscode-docker.compose.up', composeUp);
+    registerCommand('vscode-docker.compose.down', composeDown);
+    registerCommand('vscode-docker.compose.restart', composeRestart);
+    registerCommand('vscode-docker.system.prune', systemPrune);
 
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.createWebApp', async (context?: AzureImageNode | DockerHubImageNode) => {
+    registerCommand('vscode-docker.createWebApp', async (context?: AzureImageNode | DockerHubImageNode) => {
         if (context) {
             if (azureAccount) {
                 const azureAccountWrapper = new AzureAccountWrapper(ctx, azureAccount);
@@ -135,20 +139,23 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
                 }
             }
         }
-    }));
 
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.dockerHubLogout', dockerHubLogout));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.browseDockerHub', (context?: DockerHubImageNode | DockerHubRepositoryNode | DockerHubOrgNode) => {
+    });
+
+    registerCommand('vscode-docker.dockerHubLogout', dockerHubLogout);
+    registerCommand('vscode-docker.browseDockerHub', (context?: DockerHubImageNode | DockerHubRepositoryNode | DockerHubOrgNode) => {
         browseDockerHub(context);
-    }));
-    ctx.subscriptions.push(vscode.commands.registerCommand('vscode-docker.browseAzurePortal', (context?: AzureRegistryNode | AzureRepositoryNode | AzureImageNode) => {
+    });
+    registerCommand('vscode-docker.browseAzurePortal', (context?: AzureRegistryNode | AzureRepositoryNode | AzureImageNode) => {
         browseAzurePortal(context);
-    }));
+    });
 
     ctx.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('docker', new DockerDebugConfigProvider()));
 
     if (azureAccount) {
-        AzureCredentialsManager.getInstance().setAccount(azureAccount);
+        registerCommand('vscode-docker.deleteAzureImage', deleteAzureImage);
+        registerCommand('vscode-docker.createRegistry', createRegistry);
+        AzureUtilityManager.getInstance().setAccount(azureAccount);
     }
 
     activateLanguageClient(ctx);

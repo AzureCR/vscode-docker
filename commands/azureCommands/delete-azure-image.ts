@@ -1,19 +1,18 @@
 import { Registry } from "azure-arm-containerregistry/lib/models";
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as vscode from "vscode";
-import { AzureImageNode } from '../../explorer/models/AzureRegistryNodes';
-import { Repository } from "../../utils/Azure/models/repository";
-import { AzureCredentialsManager } from '../../utils/azureCredentialsManager';
-const teleCmdId: string = 'vscode-docker.deleteAzureImage';
 import * as quickPicks from '../../commands/utils/quick-pick-azure';
+import { AzureImageNode } from '../../explorer/models/AzureRegistryNodes';
 import * as acrTools from '../../utils/Azure/acrTools';
+import { Repository } from "../../utils/Azure/models/repository";
+import { AzureUtilityManager } from '../../utils/azureUtilityManager';
+const teleCmdId: string = 'vscode-docker.deleteAzureImage';
 
-/**
- * function to delete an Azure repository and its associated images
+/** Function to delete an Azure repository and its associated images
  * @param context : if called through right click on AzureRepositoryNode, the node object will be passed in. See azureRegistryNodes.ts for more info
  */
 export async function deleteAzureImage(context?: AzureImageNode): Promise<void> {
-    if (!AzureCredentialsManager.getInstance().isLoggedIn()) {
+    if (!AzureUtilityManager.getInstance().waitForLogin()) {
         vscode.window.showErrorMessage('You are not logged into Azure');
         return;
     }
