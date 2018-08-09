@@ -29,6 +29,7 @@
   "activationEvents": [
     "onLanguage:dockerfile",
     "onLanguage:yaml",
+    "onCommand:vscode-docker.acrBuildLogs",
     "onCommand:vscode-docker.image.build",
     "onCommand:vscode-docker.image.inspect",
     "onCommand:vscode-docker.image.remove",
@@ -59,8 +60,7 @@
   "main": "./out/dockerExtension",
   "contributes": {
     "menus": {
-      "commandPalette": [
-        {
+      "commandPalette": [{
           "command": "vscode-docker.browseDockerHub",
           "when": "false"
         },
@@ -69,8 +69,7 @@
           "when": "false"
         }
       ],
-      "editor/context": [
-        {
+      "editor/context": [{
           "when": "editorLangId == dockerfile",
           "command": "vscode-docker.image.build",
           "group": "docker"
@@ -106,8 +105,7 @@
           "group": "docker"
         }
       ],
-      "explorer/context": [
-        {
+      "explorer/context": [{
           "when": "resourceFilename =~ /[dD]ocker[fF]ile/",
           "command": "vscode-docker.image.build",
           "group": "docker"
@@ -128,8 +126,7 @@
           "group": "docker"
         }
       ],
-      "view/title": [
-        {
+      "view/title": [{
           "command": "vscode-docker.explorer.refresh",
           "when": "view == dockerExplorer",
           "group": "navigation"
@@ -140,8 +137,7 @@
           "group": "navigation"
         }
       ],
-      "view/item/context": [
-        {
+      "view/item/context": [{
           "command": "vscode-docker.container.start",
           "when": "view == dockerExplorer && viewItem == localImageNode"
         },
@@ -284,43 +280,49 @@
         {
           "command": "vscode-docker.browseAzurePortal",
           "when": "view == dockerExplorer && viewItem == azureImageNode"
+        },
+        {
+          "command": "vscode-docker.acrBuildLogs",
+          "when": "view == dockerExplorer && viewItem == azureRegistryNode"
+        },
+        {
+          "command": "vscode-docker.acrBuildLogs",
+          "when": "view == dockerExplorer && viewItem == azureRepositoryNode"
+        },
+        {
+          "command": "vscode-docker.acrBuildLogs",
+          "when": "view == dockerExplorer && viewItem == azureImageNode"
         }
       ]
     },
-    "debuggers": [
-      {
-        "type": "docker",
-        "label": "Docker",
-        "configurationSnippets": [
-          {
-            "label": "Docker: Attach to Node",
-            "description": "Docker: Attach to Node",
-            "body": {
-              "type": "node",
-              "request": "attach",
-              "name": "Docker: Attach to Node",
-              "port": 9229,
-              "address": "localhost",
-              "localRoot": "^\"\\${workspaceFolder}\"",
-              "remoteRoot": "/usr/src/app",
-              "protocol": "inspector"
-            }
-          }
-        ]
-      }
-    ],
-    "languages": [
-      {
-        "id": "dockerfile",
-        "aliases": [
-          "Dockerfile"
-        ],
-        "filenamePatterns": [
-          "*.dockerfile",
-          "Dockerfile"
-        ]
-      }
-    ],
+    "debuggers": [{
+      "type": "docker",
+      "label": "Docker",
+      "configurationSnippets": [{
+        "label": "Docker: Attach to Node",
+        "description": "Docker: Attach to Node",
+        "body": {
+          "type": "node",
+          "request": "attach",
+          "name": "Docker: Attach to Node",
+          "port": 9229,
+          "address": "localhost",
+          "localRoot": "^\"\\${workspaceFolder}\"",
+          "remoteRoot": "/usr/src/app",
+          "protocol": "inspector"
+        }
+      }]
+    }],
+    "languages": [{
+      "id": "dockerfile",
+      "aliases": [
+        "Dockerfile"
+      ],
+      "filenamePatterns": [
+        "*.dockerfile",
+        "Dockerfile"
+      ]
+    }],
     "configuration": {
       "type": "object",
       "title": "Docker configuration options",
@@ -480,8 +482,7 @@
         }
       }
     },
-    "commands": [
-      {
+    "commands": [{
         "command": "vscode-docker.configure",
         "title": "Add Docker files to Workspace",
         "description": "Add Dockerfile, docker-compose.yml files",
@@ -630,25 +631,26 @@
         "command": "vscode-docker.deleteAzureImage",
         "title": "Delete Azure Image",
         "category": "Docker"
+      },
+      {
+        "command": "vscode-docker.acrBuildLogs",
+        "title": "Show ACR build logs",
+        "category": "Docker"
       }
     ],
     "views": {
-      "dockerView": [
-        {
-          "id": "dockerExplorer",
-          "name": "Explorer",
-          "when": "config.docker.showExplorer == true"
-        }
-      ]
+      "dockerView": [{
+        "id": "dockerExplorer",
+        "name": "Explorer",
+        "when": "config.docker.showExplorer == true"
+      }]
     },
     "viewsContainers": {
-      "activitybar": [
-        {
-          "icon": "images/docker.svg",
-          "id": "dockerView",
-          "title": "Docker"
-        }
-      ]
+      "activitybar": [{
+        "icon": "images/docker.svg",
+        "id": "dockerView",
+        "title": "Docker"
+      }]
     }
   },
   "engines": {
@@ -685,7 +687,7 @@
     "vscode": "^1.1.18"
   },
   "dependencies": {
-    "azure-arm-containerregistry": "^2.3.0",
+    "azure-arm-containerregistry": "^2.4.0",
     "azure-arm-resource": "^2.0.0-preview",
     "azure-arm-website": "^1.0.0-preview",
     "dockerfile-language-server-nodejs": "^0.0.18",

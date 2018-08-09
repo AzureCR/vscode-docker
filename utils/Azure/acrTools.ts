@@ -6,18 +6,17 @@ import { AzureImageNode, AzureRepositoryNode } from '../../explorer/models/Azure
 import { AzureAccount, AzureSession } from "../../typings/azure-account.api";
 import { AzureImage } from "../Azure/models/image";
 import { Repository } from "../Azure/models/Repository";
-import { AzureCredentialsManager } from '../azureCredentialsManager';
+import { AzureUtilityManager } from '../azureUtilityManager';
 const teleCmdId: string = 'vscode-docker.deleteAzureImage';
 
-/**
- * Developers can use this to visualize and list repositories on a given Registry. This is not a command, just a developer tool.
+/** Developers can use this to visualize and list repositories on a given Registry. This is not a command, just a developer tool.
  * @param registry : the registry whose repositories you want to see
  * @returns allRepos : an array of Repository objects that exist within the given registry
  */
 export async function getAzureRepositories(registry: Registry): Promise<Repository[]> {
     const allRepos: Repository[] = [];
     let repo: Repository;
-    let azureAccount: AzureAccount = AzureCredentialsManager.getInstance().getAccount();
+    let azureAccount: AzureAccount = AzureUtilityManager.getInstance().getAccount();
     if (!azureAccount) {
         return [];
     }
@@ -42,14 +41,13 @@ export async function getAzureRepositories(registry: Registry): Promise<Reposito
     return allRepos;
 }
 
-/**
- * @param registry : the registry to get credentials for
+/**@param registry : the registry to get credentials for
  * @returns : the updated refresh and access tokens which can be used to generate a header for an API call
  */
 export async function getRegistryTokens(registry: Registry): Promise<{ refreshToken: any, accessToken: any }> {
-    const subscription = getRegistrySubscription(registry);
+    const subscription = getSubscriptionFromRegistry(registry);
     const tenantId: string = subscription.tenantId;
-    let azureAccount: AzureAccount = AzureCredentialsManager.getInstance().getAccount();
+    let azureAccount: AzureAccount = AzureUtilityManager.getInstance().getAccount();
 
     const session: AzureSession = azureAccount.sessions.find((s, i, array) => s.tenantId.toLowerCase() === tenantId.toLowerCase());
     const { accessToken } = await acquireARMToken(session);
@@ -112,10 +110,7 @@ export async function acquireARMToken(localSession: AzureSession): Promise<{ acc
     });
 }
 
-/**
- *
- * function used to create header for http request to acr
- */
+/** function used to create header for http request to acr */
 export function getAuthorizationHeader(username: string, password: string): string {
     let auth;
     if (username === '00000000-0000-0000-0000-000000000000') {
@@ -147,7 +142,7 @@ export async function getAzureImages(element: Repository): Promise<AzureImage[]>
     let allImages: AzureImage[] = [];
     let image: AzureImage;
     let tags;
-    let azureAccount: AzureAccount = AzureCredentialsManager.getInstance().getAccount();
+    let azureAccount: AzureAccount = AzureUtilityManager.getInstance().getAccount();
     let tenantId: string = element.subscription.tenantId;
     let refreshTokenACR;
     let accessTokenACR;
@@ -218,7 +213,7 @@ export async function loginCredentials(subscription: SubscriptionModels.Subscrip
     }
     let username: string;
     let password: string;
-    const client = AzureCredentialsManager.getInstance().getContainerRegistryManagementClient(subscription);
+    const client = AzureUtilityManager.getInstance().getContainerRegistryManagementClient(subscription);
     const resourceGroup: string = registry.id.slice(registry.id.search('resourceGroups/') + 'resourceGroups/'.length, registry.id.search('/providers/'));
     if (context) {
         username = node.userName;
@@ -236,9 +231,7 @@ export async function loginCredentials(subscription: SubscriptionModels.Subscrip
     return { password, username };
 }
 
-/**
- *
- * @param http_method : the http method, this function currently only uses delete
+/**@param http_method : the http method, this function currently only uses delete
  * @param login_server: the login server of the registry
  * @param path : the URL path
  * @param username : registry username, can be in generic form of 0's, used to generate authorization header
@@ -260,14 +253,12 @@ export async function sendRequestToRegistry(http_method: string, login_server: s
     vscode.window.showInformationMessage('Successfully deleted image');
 }
 
-/**
- *
- * @param registry gets the subscription for a given registry
+/**@param registry gets the subscription for a given registry
  * @returns a subscription object
  */
-export function getRegistrySubscription(registry: Registry): SubscriptionModels.Subscription {
+export function getSubscriptionFromRegistry(registry: Registry): SubscriptionModels.Subscription {
     let subscriptionId = registry.id.slice('/subscriptions/'.length, registry.id.search('/resourceGroups/'));
-    const subs = AzureCredentialsManager.getInstance().getFilteredSubscriptionList();
+    const subs = AzureUtilityManager.getInstance().getFilteredSubscriptionList();
     let subscription = subs.find((sub): boolean => {
         return sub.subscriptionId === subscriptionId;
     });

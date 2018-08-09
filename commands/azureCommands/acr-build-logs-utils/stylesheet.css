@@ -1,0 +1,176 @@
+.accordion {
+    background-color: var(--vscode-editor-background);
+    color: var(--color);
+    cursor: pointer;
+    margin: 0px;
+    padding: 5px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: var(--vscode-editor-font-size);
+    font-family: var(--vscode-editor-font-family);
+    transition: 0.4s;
+    text-align: center;
+}
+
+.accordion:hover {
+    cursor: pointer;
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.active {
+    background-color: var(--vscode-list-activeSelectionBackground);
+}
+
+.active.accordion:hover {
+    background-color: var(--vscode-list-activeSelectionBackground);
+}
+
+.panel {
+    width: 100%;
+    display: flex;
+    padding: 0 10px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.status.Failed {
+    color: red;
+    font-weight: bold
+}
+
+.status.Running {
+    color: yellow;
+    font-weight: bold
+}
+
+.status.Error {
+    color: rgb(255, 136, 0);
+    font-weight: bold
+}
+
+.status.Succeeded {
+    color: green;
+    font-weight: bold
+}
+
+table {
+    text-align: center;
+    width: 100%;
+}
+
+.widthControl {
+    text-align: center;
+    width: 16.45%;
+}
+
+#header {
+    top: 0px;
+    position: fixed;
+    width: 100%;
+    z-index: 1;
+    display: block;
+    background-color: var(--vscode-activityBar-background);
+}
+
+h2 {
+    padding-left: 10px;
+    font-size: var(--vscode-editor-font-size);
+    font-family: var(--vscode-editor-font-family);
+}
+
+#core {
+    margin-top: 0.6cm;
+}
+
+#headerTable {
+    font-size: var(--vscode-editor-font-size);
+    font-family: var(--vscode-editor-font-family);
+    cursor: pointer;
+}
+
+body {
+    padding: 0px;
+    width: 100%;
+    color: var(--color);
+}
+
+.logConsole {
+    height: 100px;
+    overflow-y: auto;
+}
+
+.overallTable {
+    width: 90%;
+    align-content: center;
+    text-align: center;
+}
+
+.overallTable td {
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    border-bottom: 1px solid var(--vscode-editor-foreground);
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.overallTable td,
+.overallTable th {
+    text-align: center;
+}
+
+.button-holder {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    width: 10%;
+}
+
+.viewLog {
+    background-color: var(--vscode-button-background);
+    border: none;
+    color: var(--vscode-button-foreground);
+    padding: 5px 13px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: var(--vscode-editor-font-size);
+    cursor: pointer;
+    align-items: center;
+}
+
+.loadMoreBtn {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.viewLog:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+.arrow {
+    width: 25%;
+    padding-top: 25%;
+    transform: rotate(45deg);
+    border-left: none;
+    border-top: none;
+    border-right: 2px var(--vscode-editor-foreground) solid;
+    border-bottom: 2px var(--vscode-editor-foreground) solid;
+    -webkit-transition: -webkit-transform .2s ease-in-out;
+    transition: transform .2s ease-in-out;
+}
+
+.activeArrow {
+    -webkit-transform: rotate(225deg);
+    transform: rotate(225deg);
+}

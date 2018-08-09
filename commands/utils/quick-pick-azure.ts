@@ -4,20 +4,20 @@ import * as vscode from "vscode";
 import * as acrTools from '../../utils/Azure/acrTools';
 import { AzureImage } from "../../utils/Azure/models/image";
 import { Repository } from "../../utils/Azure/models/Repository";
-import { AzureCredentialsManager } from '../../utils/azureCredentialsManager';
+import { AzureUtilityManager } from '../../utils/azureUtilityManager';
 
 /**
  * function to allow user to pick a desired image for use
  * @param repository the repository to look in
  * @returns an AzureImage object (see azureUtils.ts)
  */
-export async function quickPickACRImage(repository: Repository): Promise<AzureImage> {
+export async function quickPickACRImage(repository: Repository, prompt?: string): Promise<AzureImage> {
     const repoImages: AzureImage[] = await acrTools.getAzureImages(repository);
     let imageListNames: string[] = [];
     for (let tempImage of repoImages) {
         imageListNames.push(tempImage.tag);
     }
-    let desiredImage = await vscode.window.showQuickPick(imageListNames, { 'canPickMany': false, 'placeHolder': 'Choose the image you want to delete' });
+    let desiredImage = await vscode.window.showQuickPick(imageListNames, { 'canPickMany': false, 'placeHolder': prompt ? prompt : 'Choose an ACR image ' });
     if (!desiredImage) { return; }
     const image = repoImages.find((myImage): boolean => { return desiredImage === myImage.tag });
     return image;
@@ -28,13 +28,13 @@ export async function quickPickACRImage(repository: Repository): Promise<AzureIm
  * @param registry the registry to choose a repository from
  * @returns a Repository object (see azureUtils.ts)
  */
-export async function quickPickACRRepository(registry: Registry): Promise<Repository> {
+export async function quickPickACRRepository(registry: Registry, prompt?: string): Promise<Repository> {
     const myRepos: Repository[] = await acrTools.getAzureRepositories(registry);
     let rep: string[] = [];
     for (let repo of myRepos) {
         rep.push(repo.name);
     }
-    let desiredRepo = await vscode.window.showQuickPick(rep, { 'canPickMany': false, 'placeHolder': 'Choose the repository from which your desired image exists' });
+    let desiredRepo = await vscode.window.showQuickPick(rep, { 'canPickMany': false, 'placeHolder': prompt ? prompt : 'Choose an ACR Repository' });
     if (!desiredRepo) { return; }
     const repository = myRepos.find((currentRepo): boolean => { return desiredRepo === currentRepo.name });
     return repository;
@@ -44,14 +44,14 @@ export async function quickPickACRRepository(registry: Registry): Promise<Reposi
  * function to let user choose a registry for use
  * @returns a Registry object
  */
-export async function quickPickACRRegistry(): Promise<Registry> {
+export async function quickPickACRRegistry(prompt?: string): Promise<Registry> {
     //first get desired registry
-    let registries = await AzureCredentialsManager.getInstance().getRegistries();
+    let registries = await AzureUtilityManager.getInstance().getRegistries();
     let reg: string[] = [];
     for (let registryName of registries) {
         reg.push(registryName.name);
     }
-    let desired = await vscode.window.showQuickPick(reg, { 'canPickMany': false, 'placeHolder': 'Choose the Registry from which your desired image exists' });
+    let desired = await vscode.window.showQuickPick(reg, { 'canPickMany': false, 'placeHolder': prompt ? prompt : 'Choose an ACR Registry' });
     if (!desired) { return; }
     const registry = registries.find((currentReg): boolean => { return desired === currentReg.name });
     return registry;
