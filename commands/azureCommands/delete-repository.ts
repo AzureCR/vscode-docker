@@ -3,6 +3,7 @@ import { SubscriptionModels } from 'azure-arm-resource';
 import * as vscode from "vscode";
 import * as quickPicks from '../../commands/utils/quick-pick-azure';
 import { AzureRepositoryNode } from '../../explorer/models/AzureRegistryNodes';
+import { reporter } from '../../telemetry/telemetry';
 import * as acrTools from '../../utils/Azure/acrTools';
 import { Repository } from "../../utils/Azure/models/repository";
 
@@ -45,5 +46,13 @@ export async function deleteRepository(context?: AzureRepositoryNode): Promise<v
     const password: string = creds.password;
     let path = `/v2/_acr/${repoName}/repository`;
     await acrTools.sendRequestToRegistry('delete', registry.loginServer, path, username, password);
+    reportTelemetry();
+}
 
+function reportTelemetry(): void {
+    if (reporter) {
+        reporter.sendTelemetryEvent('command', {
+            command: teleCmdId
+        });
+    }
 }
