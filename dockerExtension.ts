@@ -10,6 +10,7 @@ import { ConfigurationParams, DidChangeConfigurationNotification, DocumentSelect
 import { createRegistry } from './commands/azureCommands/create-registry';
 import { deleteAzureImage } from './commands/azureCommands/delete-azure-image';
 import { deleteAzureRegistry } from './commands/azureCommands/delete-azure-registry';
+import { deleteRepository } from './commands/azureCommands/delete-repository';
 import { buildImage } from './commands/build-image';
 import { composeDown, composeRestart, composeUp } from './commands/docker-compose';
 import inspectImage from './commands/inspect-image';
@@ -153,8 +154,9 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     ctx.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('docker', new DockerDebugConfigProvider()));
 
     if (azureAccount) {
-        registerCommand('vscode-docker.deleteAzureRegistry', deleteAzureRegistry);
-        registerCommand('vscode-docker.deleteAzureImage', deleteAzureImage);
+        registerCommand('vscode-docker.delete-ACR-Registry', deleteAzureRegistry);
+        registerCommand('vscode-docker.delete-ACR-Image', deleteAzureImage);
+        registerCommand('vscode-docker.delete-ACR-Repository', deleteRepository);
         registerCommand('vscode-docker.createRegistry', createRegistry);
         AzureUtilityManager.getInstance().setAccount(azureAccount);
     }
