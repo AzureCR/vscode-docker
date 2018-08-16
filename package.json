@@ -55,6 +55,7 @@
     "onCommand:vscode-docker.delete-ACR-Registry",
     "onCommand:vscode-docker.delete-ACR-Repository",
     "onCommand:vscode-docker.delete-ACR-Image",
+    "onCommand:vscode-docker.pullFromAzure",
     "onView:dockerExplorer",
     "onDebugInitialConfigurations"
   ],
@@ -200,8 +201,16 @@
           "when": "view == dockerExplorer && viewItem == dockerHubRootNode"
         },
         {
-          "command": "vscode-docker.delete-ACR-Repository",
-          "when": "view == dockerExplorer && viewItem == azureRepositoryNode"
+          "command": "vscode-docker.pullFromAzure",
+          "when": "view == dockerExplorer && viewItem == azureImageNode"
+        },
+        {
+          "command": "vscode-docker.browseDockerHub",
+          "when": "view == dockerExplorer && viewItem == dockerHubImageTag"
+        },
+        {
+          "command": "vscode-docker.browseDockerHub",
+          "when": "view == dockerExplorer && viewItem == dockerHubRepository"
         },
         {
           "command": "vscode-docker.delete-ACR-Image",
@@ -553,6 +562,11 @@
       {
         "command": "vscode-docker.createWebApp",
         "title": "Deploy Image to Azure App Service",
+        "category": "Docker"
+      },
+      {
+        "command": "vscode-docker.pullFromAzure",
+        "title": "Pull Image from Azure",
         "category": "Docker"
       },
       {
