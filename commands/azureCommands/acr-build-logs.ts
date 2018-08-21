@@ -252,19 +252,19 @@ function createLogView(text: string, title: string): void {
         console.log(error);
     }
 
-    ///TODO: temporarily testing with the opentext, trying to save
-    let bool;
-    console.log("here");
-    vscode.workspace.openTextDocument(uri).then((doc) => {
-        console.log("inside openTextDocument lambda function");
-        bool = doc.save(); ///want to make this async, wasn't able to make lambda asyc
-        console.log(bool);
-        return vscode.window.showTextDocument(doc, vscode.ViewColumn.Active + 1, true);
-    });
+    // ///TODO: temporarily testing with the opentext, trying to save
+    // let bool;
+    // console.log("here");
+    // vscode.workspace.openTextDocument(uri).then((doc) => {
+    //     console.log("inside openTextDocument lambda function");
+    //     bool = doc.save(); ///want to make this async, wasn't able to make lambda asyc
+    //     console.log(bool);
+    //     return vscode.window.showTextDocument(doc, vscode.ViewColumn.Active + 1, true);
+    // });
 
-    /*vscode.commands.executeCommand('vscode.previewHtml', uri, undefined, title).then(_ => { }, _ => {
+    vscode.commands.executeCommand('vscode.previewHtml', uri, undefined, title).then(_ => { }, _ => {
         vscode.window.showErrorMessage('Cant open!');
-    });*/
+    });
 }
 /** Loads log text from remote url using azure blobservices */
 function openLog(url: string, title: string): void {
