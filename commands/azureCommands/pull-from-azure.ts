@@ -3,6 +3,8 @@ import { reporter } from '../../telemetry/telemetry';
 const teleCmdId: string = 'vscode-docker.image.pullFromAzure';
 import { AzureImageNode } from '../../explorer/models/azureRegistryNodes';
 import * as acrTools from '../../utils/Azure/acrTools';
+//tslint ignore-next-line
+const { exec } = require('child_process');
 
 /* Pulls an image from Azure. The context is the image node the user has right clicked on */
 export async function pullFromAzure(context?: AzureImageNode): Promise<any> {
@@ -17,16 +19,33 @@ export async function pullFromAzure(context?: AzureImageNode): Promise<any> {
     terminal.show();
 
     // Step 2: docker login command
-    await terminal.sendText(`docker login ${registry} -u ${username} -p ${password}`);
+    let cont = (err, stdout, stderr) => {
+        console.log(err);
+        // Step 3: docker pull command
+        //await terminal.sendText(`docker login ${registry} -u ${username} -p ${password}`);
 
-    // Step 3: docker pull command
-    await terminal.sendText(`docker pull ${registry}/${context.label}`);
+        terminal.sendText(`docker pull ${registry}/${context.label}`);
 
-    //Acquiring telemetry data here
-    if (reporter) {
-        reporter.sendTelemetryEvent('command', {
-            command: teleCmdId
-        });
+        //Acquiring telemetry data here
+        if (reporter) {
+            reporter.sendTelemetryEvent('command', {
+                command: teleCmdId
+            });
+        }
+        // let jsonStdout = JSON.parse(stdout);
+        // let soughtsrvr: string = "";
+        // for (let i = 0; i < jsonStdout.length; i++) {
+        //     let srvrName: string = jsonStdout[i].acrLoginServer;
+        //     let searchIndex: number = srvrName.search(`${regName}`);
+        //     if (searchIndex === 0 && srvrName[regName.length] === '.') { // can names include . ?
+        //         soughtsrvr = srvrName;
+        //         break;
+        //     }
+        // }
     }
+
+    exec(`docker login ${registry} -u ${username} -p ${password}`, cont);
+
+    //await terminal.sendText(`docker login ${registry} -u ${username} -p ${password}`);
 
 }
