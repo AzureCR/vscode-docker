@@ -1,0 +1,75 @@
+import * as vscode from 'vscode';
+
+export class LogContentProvider implements vscode.TextDocumentContentProvider {
+    public static scheme: string = 'purejs';
+    private onDidChangeEvent: vscode.EventEmitter<vscode.Uri> = new vscode.EventEmitter<vscode.Uri>();
+
+    constructor() { }
+
+    public provideTextDocumentContent(uri: vscode.Uri): string {
+        return this.stylehtml(this.decodeBase64(JSON.parse(uri.query).log));
+    }
+
+    get onDidChange(): vscode.Event<vscode.Uri> {
+        return this.onDidChangeEvent.event;
+    }
+
+    public update(uri: vscode.Uri, message: string): void {
+        this.onDidChangeEvent.fire(uri);
+    }
+
+    private decodeBase64(str: string): string {
+        return Buffer.from(str, 'base64').toString('ascii');
+    }
+
+    private stylehtml(log: string): string {
+        let processedLog: string = '';
+        const lines: string[] = log.split(`\n`);
+        if (lines.length === 0) { return 'This Log appears to be empty'; }
+        lines[0] = lines[0].trim();
+
+        for (let line of lines) {
+            if (line.toLowerCase().indexOf('error') !== -1 || line.toLowerCase().indexOf('fail') !== -1) {
+                processedLog += `<span class = 'r'>${line}\n </span>`
+            } else if (line.toLowerCase().indexOf('success') !== -1 || line.toLowerCase().indexOf('succeeded') !== -1 || line.toLowerCase().indexOf('complete') !== -1 ||
+                line.toLowerCase().indexOf('0 warning(s)') !== -1 || line.toLowerCase().indexOf('0 error(s)') !== -1) {
+                processedLog += `<span class = 'g'>${line}\n </span>`
+            } else {
+                processedLog += `${line}\n`
+            }
+        }
+        return `
+        <doctype = <!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="utf-8" />
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <title>Page Title</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                    body{
+                        font-size: var(--vscode-editor-font-size);
+                        font-family: var(--vscode-editor-font-family);
+                    }
+                    #force{
+                        font-size: var(--vscode-editor-font-size);
+                        font-family: monospace;
+                        font-size: var(--font-size);
+                        font-weight: var(--font-weight);
+                    }
+                    .r{
+                        color:var(--vscode-terminal-ansiBrightRed);
+                    }
+                    .g{
+                        color:var(--vscode-terminal-ansiBrightGreen);
+                    }
+
+                </style>
+            </head>
+
+            <body>
+                <pre><span id="force">${processedLog}</span></pre>
+            </body>
+        </html>`
+    }
+}
