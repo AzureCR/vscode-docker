@@ -13,6 +13,7 @@ import { deleteAzureImage } from './commands/azureCommands/delete-image';
 import { deleteAzureRegistry } from './commands/azureCommands/delete-registry';
 import { deleteRepository } from './commands/azureCommands/delete-repository';
 import { pullFromAzure } from './commands/azureCommands/pull-from-azure';
+import { runBuildTask } from './commands/azureCommands/run-buildTask';
 import { showBuildTaskProperties } from './commands/azureCommands/show-buildTask';
 import { buildImage } from './commands/build-image';
 import { composeDown, composeRestart, composeUp } from './commands/docker-compose';
@@ -139,6 +140,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     registerCommand('vscode-docker.deleteAzureImage', deleteAzureImage);
     registerCommand('vscode-docker.pullFromAzure', pullFromAzure);
     //registerCommand('vscode-docker.showBuildTaskProperties', showBuildTaskProperties);
+    //registerCommand('vscode-docker.runBuildTask', runBuildTask); ///here
     registerCommand('vscode-docker.createWebApp', async (context?: AzureImageNode | DockerHubImageNode) => {
         if (context) {
             if (azureAccount) {
@@ -171,6 +173,10 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
 
     registerCommand('vscode-docker.showBuildTaskProperties', (context?: BuildTaskNode) => {
         showBuildTaskProperties(context);
+    });
+
+    registerCommand('vscode-docker.runBuildTask', (context?: BuildTaskNode) => {
+        runBuildTask(context);
     });
 
     ctx.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('docker', new DockerDebugConfigProvider()));
