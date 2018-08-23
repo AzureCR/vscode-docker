@@ -116,7 +116,7 @@ export async function quickPickResourceGroup(canCreateNew?: boolean, subscriptio
     let resourceGroups = await AzureUtilityManager.getInstance().getResourceGroups(subscription);
     let resourceGroupNames: string[] = [];
 
-    if (canCreateNew) { resourceGroupNames.push('+ Create new resource group'); }
+    if (canCreateNew) { resourceGroupNames.push('+ Create new Resource Group'); }
     for (let resGroupName of resourceGroups) {
         resourceGroupNames.push(resGroupName.name);
     }

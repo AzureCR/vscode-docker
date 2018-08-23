@@ -1,0 +1,251 @@
+.accordion {
+    background-color: var(--vscode-editor-background);
+    color: var(--color);
+    cursor: pointer;
+    margin: 0px;
+    height: 30px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: var(--vscode-editor-font-size);
+    font-family: var(--vscode-editor-font-family);
+    transition: 0.4s;
+    text-align: left;
+}
+
+.accordion:hover {
+    cursor: pointer;
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.active {
+    background-color: var(--vscode-list-activeSelectionBackground);
+}
+
+.active.accordion:hover {
+    background-color: var(--vscode-list-activeSelectionBackground);
+}
+
+.panel {
+    width: 100%;
+    display: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.status.Failed {
+    color: var(--vscode-terminal-ansiBrightRed);
+    font-weight: bold;
+}
+
+.status.Running {
+    color: var(--vscode-terminal-ansiBlue);
+}
+
+.status.Error {
+    color: var(--vscode-terminal-ansiYellow);
+}
+
+table {
+    text-align: left;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.widthControl {
+    box-sizing: border-box;
+    text-align: left;
+    width: calc(15.9%);
+    padding-right: 0.7cm;
+}
+
+.widthControl2 {
+    box-sizing: border-box;
+    text-align: left;
+    width: calc(31.8%);
+    padding-right: 0.7cm;
+}
+
+.widthControl3 {
+    box-sizing: border-box;
+    text-align: left;
+    width: calc(47.7%);
+    padding-right: 0.7cm;
+}
+
+.widthControl5 {
+    box-sizing: border-box;
+    text-align: left;
+    width: calc(79.5%);
+    padding-right: 0.7cm;
+}
+
+#header {
+    height: 1cm;
+    top: 0px;
+    position: fixed;
+    width: 100%;
+    z-index: 1;
+    display: block;
+    background-color: var(--vscode-activityBar-background);
+    color: var(--vscode-activityBar-foreground);
+}
+
+h2 {
+    padding-left: 10px;
+    font-size: var(--vscode-editor-font-size);
+    font-family: var(--vscode-editor-font-family);
+}
+
+#core {
+    margin-top: 1cm;
+}
+
+#headerTable {
+    font-size: var(--vscode-editor-font-size);
+    font-family: var(--vscode-editor-font-family);
+    cursor: pointer;
+    height: 100%;
+}
+
+body {
+    padding: 0px;
+    width: 100%;
+    color: var(--color);
+}
+
+.logConsole {
+    height: 100px;
+    overflow-y: auto;
+}
+
+.innerTable td {
+    border-bottom: 1px solid var(--vscode-editor-foreground);
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+}
+
+.innerTable td.lastTd {
+    border-bottom: 0px;
+}
+
+.innerTable td.arrowHolder {
+    border-bottom: 0px;
+    padding-right: 0.7cm;
+}
+
+.innerTable td,
+.innerTable th {
+    text-align: left;
+}
+
+.button-holder {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    width: 100%;
+    padding-left: 0.7cm;
+}
+
+.viewLog {
+    background-color: var(--vscode-button-background);
+    border: none;
+    color: var(--vscode-button-foreground);
+    padding: 5px 13px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: var(--vscode-editor-font-size);
+    cursor: pointer;
+    align-items: center;
+}
+
+.loadMoreBtn {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.viewLog:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+.arrow {
+    transform: rotate(45deg);
+    -webkit-transition: -webkit-transform .2s ease-in-out;
+    transition: transform .2s ease-in-out;
+}
+
+.activeArrow {
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+
+.paddingDiv {
+    display: flex;
+    width: 100%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.copy:hover {
+    cursor: pointer;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    justify-content: center;
+    align-content: center;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.5);
+    /*dim the background*/
+}
+
+.modal {
+    margin: auto;
+    display: none;
+    width: 40%;
+    z-index: 11;
+}
+
+.copyBtn {
+    background-color: var(--vscode-button-background);
+    border: none;
+    color: var(--vscode-button-foreground);
+    padding: 5px 13px;
+    text-align: left;
+    text-decoration: none;
+    display: inline-block;
+    font-size: var(--vscode-editor-font-size);
+    cursor: pointer;
+    align-items: left;
+}
+
+#digestVisualizer {
+    width: 85%;
+}
+
+.arrowHolder {
+    box-sizing: border-box;
+    width: 4.6%;
+    padding-right: 0.7cm;
+    text-align: center;
+}
+
+.overflowX {
+    overflow-x: auto;
+}
