@@ -13,6 +13,7 @@ import { deleteAzureImage } from './commands/azureCommands/delete-image';
 import { deleteAzureRegistry } from './commands/azureCommands/delete-registry';
 import { deleteRepository } from './commands/azureCommands/delete-repository';
 import { pullFromAzure } from './commands/azureCommands/pull-from-azure';
+import { showBuildTaskProperties } from './commands/azureCommands/show-buildTask';
 import { buildImage } from './commands/build-image';
 import { composeDown, composeRestart, composeUp } from './commands/docker-compose';
 import inspectImage from './commands/inspect-image';
@@ -42,6 +43,7 @@ import { WebAppCreator } from './explorer/deploy/webAppCreator';
 import { DockerExplorerProvider } from './explorer/dockerExplorer';
 import { AzureImageNode, AzureRegistryNode, AzureRepositoryNode } from './explorer/models/azureRegistryNodes';
 import { DockerHubImageNode, DockerHubOrgNode, DockerHubRepositoryNode } from './explorer/models/dockerHubNodes';
+import { BuildTaskNode } from './explorer/models/taskNode';
 import { browseAzurePortal } from './explorer/utils/azureUtils';
 import { browseDockerHub, dockerHubLogout } from './explorer/utils/dockerHubUtils';
 import { ext } from "./extensionVariables";
@@ -136,6 +138,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     registerCommand('vscode-docker.system.prune', systemPrune);
     registerCommand('vscode-docker.deleteAzureImage', deleteAzureImage);
     registerCommand('vscode-docker.pullFromAzure', pullFromAzure);
+    //registerCommand('vscode-docker.showBuildTaskProperties', showBuildTaskProperties);
     registerCommand('vscode-docker.createWebApp', async (context?: AzureImageNode | DockerHubImageNode) => {
         if (context) {
             if (azureAccount) {
@@ -166,6 +169,10 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
         browseAzurePortal(context);
     });
 
+    registerCommand('vscode-docker.showBuildTaskProperties', (context?: BuildTaskNode) => {
+        showBuildTaskProperties(context);
+    });
+
     ctx.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('docker', new DockerDebugConfigProvider()));
 
     if (azureAccount) {
@@ -173,6 +180,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
         registerCommand('vscode-docker.delete-ACR-Image', deleteAzureImage);
         registerCommand('vscode-docker.delete-ACR-Repository', deleteRepository);
         registerCommand('vscode-docker.create-ACR-Registry', createRegistry);
+        //registerCommand('vscode-docker.showBuildTaskProperties', showBuildTaskProperties);
         AzureUtilityManager.getInstance().setAccount(azureAccount);
 
     }
