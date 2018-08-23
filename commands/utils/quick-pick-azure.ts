@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import { Registry } from 'azure-arm-containerregistry/lib/models';
+import * as ContainerModels from 'azure-arm-containerregistry/lib/models';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { Location, Subscription } from 'azure-arm-resource/lib/subscription/models';
 import * as opn from 'opn';
@@ -31,6 +32,24 @@ export async function quickPickACRRepository(registry: Registry, prompt?: string
     const quickPickRepoList = repositories.map(repo => <IAzureQuickPickItem<Repository>>{ label: repo.name, data: repo });
     let desiredRepo = await ext.ui.showQuickPick(quickPickRepoList, { 'canPickMany': false, 'placeHolder': placeHolder });
     return desiredRepo.data;
+}
+
+export async function quickPickBuildTask(registry: Registry, subscription: Subscription, resourceGroup: ResourceGroup, prompt?: string): Promise<ContainerModels.BuildTask> {
+    let buildTasks: ContainerModels.BuildTask[] = [];
+    const client = AzureUtilityManager.getInstance().getContainerRegistryManagementClient(subscription);
+
+    buildTasks = await client.buildTasks.list(resourceGroup.name, registry.name);
+
+    const placeHolder = prompt ? prompt : 'Choose a Build Task';
+    let buildTaskNames: string[] = [];
+
+    for (let bt of buildTasks) {
+        buildTaskNames.push(bt.name);
+    }
+    let desiredBuildTask = await vscode.window.showQuickPick(buildTaskNames, { 'canPickMany': false, 'placeHolder': placeHolder });
+    if (!desiredBuildTask) { return; }
+    const buildTask = buildTasks.find((currentBuildTask): boolean => { return desiredBuildTask === currentBuildTask.name });
+    return buildTask;
 }
 
 export async function quickPickACRRegistry(canCreateNew: boolean = false, prompt?: string): Promise<Registry> {
