@@ -34,14 +34,13 @@ export async function quickPickACRRepository(registry: Registry, prompt?: string
     return desiredRepo.data;
 }
 
-export async function quickPickBuildTask(registry: Registry, subscription: Subscription, prompt?: string): Promise<ContainerModels.BuildTask> {
+export async function quickPickBuildTask(registry: Registry, subscription: Subscription, resourceGroup: ResourceGroup, prompt?: string): Promise<ContainerModels.BuildTask> {
     const placeHolder = prompt ? prompt : 'Choose a Build Task';
     const client = AzureUtilityManager.getInstance().getContainerRegistryManagementClient(subscription);
-    let resourceGroup = acrTools.getResourceGroupName(registry);
 
     let buildTasks: ContainerModels.BuildTask[] = [];
     let buildTaskNames: string[] = [];
-    buildTasks = await client.buildTasks.list(resourceGroup, registry.name);
+    buildTasks = await client.buildTasks.list(resourceGroup.name, registry.name);
 
     for (let bt of buildTasks) {
         buildTaskNames.push(bt.name);
