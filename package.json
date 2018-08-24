@@ -231,7 +231,7 @@
         },
         {
           "command": "vscode-docker.showBuildTaskProperties",
-          "when": "view == dockerExplorer && viewItem == buildTaskNode"
+          "when": "view == dockerExplorer && viewItem =~ /^(buildTaskNode)$/"
         },
         {
           "command": "vscode-docker.runBuildTask",

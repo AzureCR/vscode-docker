@@ -139,7 +139,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     registerCommand('vscode-docker.system.prune', systemPrune);
     registerCommand('vscode-docker.deleteAzureImage', deleteAzureImage);
     registerCommand('vscode-docker.pullFromAzure', pullFromAzure);
-    //registerCommand('vscode-docker.showBuildTaskProperties', showBuildTaskProperties);
+    registerCommand('vscode-docker.showBuildTaskProperties', showBuildTaskProperties);
     //registerCommand('vscode-docker.runBuildTask', runBuildTask); ///here
     registerCommand('vscode-docker.createWebApp', async (context?: AzureImageNode | DockerHubImageNode) => {
         if (context) {
@@ -171,13 +171,13 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
         browseAzurePortal(context);
     });
 
-    registerCommand('vscode-docker.showBuildTaskProperties', (context?: BuildTaskNode) => {
-        showBuildTaskProperties(context);
-    });
+    // registerCommand('vscode-docker.showBuildTaskProperties', (context?: AzureRegistryNode | BuildTaskNode) => {
+    //     showBuildTaskProperties(context);
+    // });
 
-    registerCommand('vscode-docker.runBuildTask', (context?: BuildTaskNode) => {
-        runBuildTask(context);
-    });
+    // registerCommand('vscode-docker.runBuildTask', (context?: BuildTaskNode) => {
+    //     runBuildTask(context);
+    // });
 
     ctx.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('docker', new DockerDebugConfigProvider()));
 
@@ -186,7 +186,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
         registerCommand('vscode-docker.delete-ACR-Image', deleteAzureImage);
         registerCommand('vscode-docker.delete-ACR-Repository', deleteRepository);
         registerCommand('vscode-docker.create-ACR-Registry', createRegistry);
-        //registerCommand('vscode-docker.showBuildTaskProperties', showBuildTaskProperties);
+        //registerCommand('vscode-docker.showBuildTaskProperties', showBuildTaskProperties); ///here
         AzureUtilityManager.getInstance().setAccount(azureAccount);
 
     }
