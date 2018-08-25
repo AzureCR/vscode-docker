@@ -9,9 +9,9 @@ import { NodeBase } from './nodeBase';
 
 /* Single TaskRootNode under each Repository. Labeled "Build Tasks" */
 export class TaskRootNode extends NodeBase {
+    public static readonly contextValue: string = 'taskRootNode';
     constructor(
         public readonly label: string,
-        public readonly contextValue: string,
         public subscription: SubscriptionModels.Subscription,
         public readonly azureAccount: AzureAccount,
         public registry: ContainerModels.Registry,
@@ -48,7 +48,7 @@ export class TaskRootNode extends NodeBase {
         }
 
         for (let buildTask of buildTasks) {
-            let node = new BuildTaskNode(buildTask.name, "buildTaskNode");
+            let node = new BuildTaskNode(buildTask.name);
             buildTaskNodes.push(node);
         }
         return buildTaskNodes;
@@ -56,10 +56,9 @@ export class TaskRootNode extends NodeBase {
 }
 
 export class BuildTaskNode extends NodeBase {
-
+    public static readonly contextValue: string = 'buildTaskNode';
     constructor(
         public readonly label: string,
-        public readonly contextValue: string,
     ) {
         super(label);
     }
