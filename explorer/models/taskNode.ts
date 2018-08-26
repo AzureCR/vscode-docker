@@ -26,7 +26,7 @@ export class TaskRootNode extends NodeBase {
         return {
             label: this.label,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            contextValue: this.contextValue,
+            contextValue: TaskRootNode.contextValue,
             iconPath: this.iconPath
         }
     }
@@ -61,5 +61,14 @@ export class BuildTaskNode extends NodeBase {
         public readonly label: string,
     ) {
         super(label);
+    }
+
+    public getTreeItem(): vscode.TreeItem {
+        return {
+            label: this.label,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextValue: BuildTaskNode.contextValue,
+            iconPath: null
+        }
     }
 }
