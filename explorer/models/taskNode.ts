@@ -10,12 +10,15 @@ import { NodeBase } from './nodeBase';
 /* Single TaskRootNode under each Repository. Labeled "Build Tasks" */
 export class TaskRootNode extends NodeBase {
     public static readonly contextValue: string = 'taskRootNode';
+    private _onDidChangeTreeData: vscode.EventEmitter<NodeBase> = new vscode.EventEmitter<NodeBase>();
+    public readonly onDidChangeTreeData: vscode.Event<NodeBase> = this._onDidChangeTreeData.event;
     constructor(
         public readonly label: string,
         public subscription: SubscriptionModels.Subscription,
         public readonly azureAccount: AzureAccount,
         public registry: ContainerModels.Registry,
-        public readonly iconPath: any = {}
+        public readonly iconPath: any = {},
+        public readonly eventEmitter: vscode.EventEmitter<NodeBase>,
     ) {
         super(label);
     }
@@ -48,7 +51,7 @@ export class TaskRootNode extends NodeBase {
         }
 
         for (let buildTask of buildTasks) {
-            let node = new BuildTaskNode(buildTask.name);
+            let node = new BuildTaskNode(buildTask.name, element.registry, this._onDidChangeTreeData);
             buildTaskNodes.push(node);
         }
         return buildTaskNodes;
@@ -59,6 +62,8 @@ export class BuildTaskNode extends NodeBase {
     public static readonly contextValue: string = 'buildTaskNode';
     constructor(
         public readonly label: string,
+        public registry: ContainerModels.Registry,
+        public readonly eventEmitter: vscode.EventEmitter<NodeBase>,
     ) {
         super(label);
     }
