@@ -5,20 +5,18 @@ import { quickPickACRRegistry, quickPickBuildTask, quickPickResourceGroup, quick
 
 export async function runBuildTask(context?: BuildTaskNode): Promise<any> {
     const terminal = vscode.window.createTerminal("Docker");
+    let command: string;
 
-    if (context) {
-        console.log("right click");
-        terminal.show();
-        //terminal.sendText(`az acr build-task show -n ${context.label} -r ${}`);
-    } else {
-        console.log("input bar");
+    if (context) { // Right Click
+        command = `az acr build-task run -n ${context.label} -r ${context.registry.name}`;
+    } else { // Command Palette
         let subscription = await quickPickSubscription();
         let resourceGroup = await quickPickResourceGroup();
         let registry = await quickPickACRRegistry();
         let buildTask = await quickPickBuildTask(registry, subscription, resourceGroup);
-        terminal.show();
-        terminal.sendText(`az acr build-task run -n ${buildTask.name} -r ${registry.name}`);
-
+        command = `az acr build-task run -n ${buildTask.name} -r ${registry.name}`;
     }
+    terminal.show();
+    terminal.sendText(command);
 
 }
