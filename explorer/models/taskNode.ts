@@ -18,7 +18,6 @@ export class TaskRootNode extends NodeBase {
         public readonly azureAccount: AzureAccount,
         public registry: ContainerModels.Registry,
         public readonly iconPath: any = {},
-        public readonly eventEmitter: vscode.EventEmitter<NodeBase>,
     ) {
         super(label);
     }
