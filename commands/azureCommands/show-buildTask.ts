@@ -1,8 +1,7 @@
-import { BuildTaskNode } from "../../explorer/models/taskNode";
-const teleCmdId: string = 'vscode-docker.showBuildTaskProperties';
-import { BuildTask, Registry } from "azure-arm-containerregistry/lib/models";
+import { Registry } from "azure-arm-containerregistry/lib/models";
 import { ResourceGroup } from "azure-arm-resource/lib/resource/models";
 import { Subscription } from "azure-arm-resource/lib/subscription/models";
+import { BuildTaskNode } from "../../explorer/models/taskNode";
 import { getResourceGroupName } from "../../utils/Azure/acrTools";
 import { AzureUtilityManager } from "../../utils/azureUtilityManager";
 import { quickPickACRRegistry, quickPickBuildTask, quickPickSubscription } from '../utils/quick-pick-azure';
