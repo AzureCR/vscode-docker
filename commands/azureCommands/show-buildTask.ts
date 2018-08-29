@@ -32,7 +32,7 @@ export async function showBuildTaskProperties(context?: BuildTaskNode): Promise<
     openTask(JSON.stringify(item, undefined, 1), buildTask);
 }
 
-async function getResourceGroup(registry: Registry, subscription: Subscription): Promise<ResourceGroup> {
+async function getResourceGroup(registry: Registry, subscription: Subscription): Promise<ResourceGroup> { ///to do: move to acr tools
     let resourceGroups: ResourceGroup[] = await AzureUtilityManager.getInstance().getResourceGroups(subscription);
     const resourceGroupName = getResourceGroupName(registry);
     return resourceGroups.find((res) => { return res.name === resourceGroupName });
