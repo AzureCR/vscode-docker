@@ -14,8 +14,8 @@ export async function showBuildTaskProperties(context?: BuildTaskNode): Promise<
     let buildTask: string;
 
     if (context) { // Right click
-        registry = context.registry;
         subscription = context.susbscription;
+        registry = context.registry;
         resourceGroup = await getResourceGroup(registry, subscription);
         buildTask = context.label;
     } else { // Command palette
