@@ -17,6 +17,7 @@ import { deleteRepository } from './commands/azureCommands/delete-repository';
 import { pullFromAzure } from './commands/azureCommands/pull-from-azure';
 import { runBuildTask } from './commands/azureCommands/run-buildTask';
 import { showBuildTaskProperties } from './commands/azureCommands/show-buildTask';
+import { TaskContentProvider } from './commands/azureCommands/task-utils/showTaskManager';
 import { buildImage } from './commands/build-image';
 import { composeDown, composeRestart, composeUp } from './commands/docker-compose';
 import inspectImage from './commands/inspect-image';
