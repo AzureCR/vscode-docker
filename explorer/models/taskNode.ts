@@ -50,7 +50,7 @@ export class TaskRootNode extends NodeBase {
         }
 
         for (let buildTask of buildTasks) {
-            let node = new BuildTaskNode(buildTask.name, element.registry, this._onDidChangeTreeData);
+            let node = new BuildTaskNode(buildTask.name, element.registry, element.subscription, element);
             buildTaskNodes.push(node);
         }
         return buildTaskNodes;
@@ -62,7 +62,9 @@ export class BuildTaskNode extends NodeBase {
     constructor(
         public readonly label: string,
         public registry: ContainerModels.Registry,
-        public readonly eventEmitter: vscode.EventEmitter<NodeBase>,
+        public susbscription: SubscriptionModels.Subscription,
+        public parent: NodeBase
+
     ) {
         super(label);
     }
