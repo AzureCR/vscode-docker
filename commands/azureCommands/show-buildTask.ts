@@ -27,8 +27,14 @@ export async function showBuildTaskProperties(context?: BuildTaskNode): Promise<
 
     const client = AzureUtilityManager.getInstance().getContainerRegistryManagementClient(subscription);
     let item: any = await client.buildTasks.get(resourceGroup.name, registry.name, buildTask);
-    let steps = await client.buildSteps.get(resourceGroup.name, registry.name, buildTask, `${buildTask}StepName`);
-    item.properties = steps;
+
+    try {
+        let steps = await client.buildSteps.get(resourceGroup.name, registry.name, buildTask, `${buildTask}StepName`);
+        item.properties = steps;
+    } catch (error) {
+        console.error("error in build step**");
+    }
+
     openTask(JSON.stringify(item, undefined, 1), buildTask);
 }
 
