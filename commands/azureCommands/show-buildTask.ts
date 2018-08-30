@@ -16,12 +16,12 @@ export async function showBuildTaskProperties(context?: BuildTaskNode): Promise<
     if (context) { // Right click
         subscription = context.susbscription;
         registry = context.registry;
-        resourceGroup = await getResourceGroup(registry, subscription);
+        resourceGroup = await acrTools.getResourceGroup(registry, subscription);
         buildTask = context.label;
     } else { // Command palette
         subscription = await quickPickSubscription();
         registry = await quickPickACRRegistry();
-        resourceGroup = await getResourceGroup(registry, subscription);
+        resourceGroup = await acrTools.getResourceGroup(registry, subscription);
         buildTask = (await quickPickBuildTask(registry, subscription, resourceGroup)).name;
     }
 
@@ -32,14 +32,8 @@ export async function showBuildTaskProperties(context?: BuildTaskNode): Promise<
         let steps = await client.buildSteps.get(resourceGroup.name, registry.name, buildTask, `${buildTask}StepName`);
         item.properties = steps;
     } catch (error) {
-        console.error("error in build step**");
+        console.error("Build Step not available for this image due to update in API");
     }
 
     openTask(JSON.stringify(item, undefined, 1), buildTask);
-}
-
-async function getResourceGroup(registry: Registry, subscription: Subscription): Promise<ResourceGroup> { ///to do: move to acr tools
-    let resourceGroups: ResourceGroup[] = await AzureUtilityManager.getInstance().getResourceGroups(subscription);
-    const resourceGroupName = getResourceGroupName(registry);
-    return resourceGroups.find((res) => { return res.name === resourceGroupName });
 }

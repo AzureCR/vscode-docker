@@ -6,6 +6,7 @@
 import * as assert from 'assert';
 import { Registry } from "azure-arm-containerregistry/lib/models";
 import { SubscriptionModels } from 'azure-arm-resource';
+import { ResourceGroup } from "azure-arm-resource/lib/resource/models";
 import { Subscription } from "azure-arm-resource/lib/subscription/models";
 import { NULL_GUID } from "../../constants";
 import { getCatalog, getTags, TagInfo } from "../../explorer/models/commonRegistryUtils";
@@ -31,6 +32,13 @@ export function getSubscriptionFromRegistry(registry: Registry): SubscriptionMod
 }
 export function getResourceGroupName(registry: Registry): any {
     return registry.id.slice(registry.id.search('resourceGroups/') + 'resourceGroups/'.length, registry.id.search('/providers/'));
+}
+
+//Gets resource group object from registry and subscription
+async function getResourceGroup(registry: Registry, subscription: Subscription): Promise<ResourceGroup> { ///to do: move to acr tools
+    let resourceGroups: ResourceGroup[] = await AzureUtilityManager.getInstance().getResourceGroups(subscription);
+    const resourceGroupName = getResourceGroupName(registry);
+    return resourceGroups.find((res) => { return res.name === resourceGroupName });
 }
 
 //Registry item management
@@ -105,7 +113,7 @@ export async function sendRequestToRegistry(http_method: string, login_server: s
 
 //Credential management
 /** Obtains registry username and password compatible with docker login */
-export async function loginCredentials(registry: Registry): Promise<{ password: string, username: string }> {
+export async function getLoginCredentials(registry: Registry): Promise<{ password: string, username: string }> {
     const subscription: Subscription = getSubscriptionFromRegistry(registry);
     const session: AzureSession = AzureUtilityManager.getInstance().getSession(subscription)
     const { aadAccessToken, aadRefreshToken } = await acquireAADTokens(session);
