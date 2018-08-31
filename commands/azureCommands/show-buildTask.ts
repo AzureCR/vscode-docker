@@ -14,7 +14,7 @@ export async function showBuildTaskProperties(context?: BuildTaskNode): Promise<
     let buildTask: string;
 
     if (context) { // Right click
-        subscription = context.susbscription;
+        subscription = context.subscription;
         registry = context.registry;
         resourceGroup = await acrTools.getResourceGroup(registry, subscription);
         buildTask = context.label;

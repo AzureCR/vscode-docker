@@ -208,6 +208,7 @@ function registerDockerCommands(azureAccount: AzureAccount): void {
     registerAzureCommand('vscode-docker.queueBuild', queueBuild);
     registerAzureCommand('vscode-docker.pullFromAzure', pullFromAzure);
     registerAzureCommand('vscode-docker.showBuildTaskProperties', showBuildTaskProperties);
+    registerAzureCommand('vscode-docker.runBuildTask', runBuildTask);
 }
 
 async function consolidateDefaultRegistrySettings(): Promise<void> {

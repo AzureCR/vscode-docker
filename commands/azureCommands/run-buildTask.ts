@@ -1,22 +1,42 @@
-import { BuildTaskNode } from "../../explorer/models/taskNode";
-const teleCmdId: string = 'runBuildTask';
+import { BuildTaskBuildRequest } from "azure-arm-containerregistry/lib/models";
+import { Registry } from "azure-arm-containerregistry/lib/models";
+import { ResourceGroup } from "azure-arm-resource/lib/resource/models";
+import { Subscription } from "azure-arm-resource/lib/subscription/models";
 import vscode = require('vscode');
-import { quickPickACRRegistry, quickPickBuildTask, quickPickResourceGroup, quickPickSubscription } from '../utils/quick-pick-azure';
+import { BuildTaskNode } from "../../explorer/models/taskNode";
+import * as acrTools from '../../utils/Azure/acrTools';
+import { AzureUtilityManager } from "../../utils/azureUtilityManager";
+import { quickPickACRRegistry, quickPickBuildTask, quickPickSubscription } from '../utils/quick-pick-azure';
 
 export async function runBuildTask(context?: BuildTaskNode): Promise<any> {
-    const terminal = vscode.window.createTerminal("Docker");
-    let command: string;
+    let buildTaskName: string;
+    let subscription: Subscription;
+    let resourceGroup: ResourceGroup;
+    let registry: Registry;
 
     if (context) { // Right Click
-        command = `az acr build-task run -n ${context.label} -r ${context.registry.name}`;
+        subscription = context.subscription;
+        registry = context.registry;
+        resourceGroup = await acrTools.getResourceGroup(registry, subscription);
+        buildTaskName = context.label;
     } else { // Command Palette
-        let subscription = await quickPickSubscription();
-        let resourceGroup = await quickPickResourceGroup();
-        let registry = await quickPickACRRegistry();
-        let buildTask = await quickPickBuildTask(registry, subscription, resourceGroup);
-        command = `az acr build-task run -n ${buildTask.name} -r ${registry.name}`;
+        subscription = await quickPickSubscription();
+        registry = await quickPickACRRegistry();
+        resourceGroup = await acrTools.getResourceGroup(registry, subscription);
+        buildTaskName = (await quickPickBuildTask(registry, subscription, resourceGroup)).name;
     }
-    terminal.show();
-    terminal.sendText(command);
+
+    const client = AzureUtilityManager.getInstance().getContainerRegistryManagementClient(subscription);
+    let buildRequest: BuildTaskBuildRequest = {
+        'type': 'BuildTask',
+        'buildTaskName': buildTaskName
+    };
+
+    try {
+        let build = await client.registries.queueBuild(resourceGroup.name, registry.name, buildRequest);
+    } catch (err) {
+        console.log(err);
+    }
+    vscode.window.showInformationMessage(`Successfully ran the Build Task, ${buildTaskName}`);
 
 }
