@@ -33,7 +33,7 @@ export async function runBuildTask(context?: BuildTaskNode): Promise<any> {
     };
 
     try {
-        let build = await client.registries.queueBuild(resourceGroup.name, registry.name, buildRequest);
+        await client.registries.queueBuild(resourceGroup.name, registry.name, buildRequest);
     } catch (err) {
         console.log(err);
     }
