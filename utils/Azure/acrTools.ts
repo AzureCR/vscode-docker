@@ -12,7 +12,6 @@ import { NULL_GUID } from "../../constants";
 import { getCatalog, getTags, TagInfo } from "../../explorer/models/commonRegistryUtils";
 import { ext } from '../../extensionVariables';
 import { AzureSession } from "../../typings/azure-account.api";
-import { addUserAgent } from "../addUserAgent";
 import { AzureUtilityManager } from '../azureUtilityManager';
 import { AzureImage } from "./models/image";
 import { Repository } from "./models/repository";
@@ -30,6 +29,7 @@ export function getSubscriptionFromRegistry(registry: Registry): SubscriptionMod
     });
     return subscription;
 }
+
 export function getResourceGroupName(registry: Registry): any {
     return registry.id.slice(registry.id.search('resourceGroups/') + 'resourceGroups/'.length, registry.id.search('/providers/'));
 }
@@ -101,6 +101,7 @@ export async function getLoginCredentials(registry: Registry): Promise<{ passwor
     const acrRefreshToken = await acquireACRRefreshToken(registry.loginServer, session.tenantId, aadRefreshToken, aadAccessToken);
     return { 'password': acrRefreshToken, 'username': NULL_GUID };
 }
+
 /** Obtains tokens for using the Docker Registry v2 Api
  * @param registry The targeted Azure Container Registry
  * @param scope String determining the scope of the access token
@@ -114,6 +115,7 @@ export async function acquireACRAccessTokenFromRegistry(registry: Registry, scop
     const acrAccessToken = await acquireACRAccessToken(registry.loginServer, scope, acrRefreshToken)
     return { acrRefreshToken, acrAccessToken };
 }
+
 /** Obtains refresh and access tokens for Azure Active Directory. */
 export async function acquireAADTokens(session: AzureSession): Promise<{ aadAccessToken: string, aadRefreshToken: string }> {
     return new Promise<{ aadAccessToken: string, aadRefreshToken: string }>((resolve, reject) => {
@@ -131,6 +133,7 @@ export async function acquireAADTokens(session: AzureSession): Promise<{ aadAcce
         });
     });
 }
+
 /** Obtains refresh tokens for Azure Container Registry. */
 export async function acquireACRRefreshToken(registryUrl: string, tenantId: string, aadRefreshToken: string, aadAccessToken: string): Promise<string> {
     const acrRefreshTokenResponse: { refresh_token: string } = await ext.request.post(`https://${registryUrl}/oauth2/exchange`, {
@@ -146,6 +149,7 @@ export async function acquireACRRefreshToken(registryUrl: string, tenantId: stri
 
     return acrRefreshTokenResponse.refresh_token;
 }
+
 /** Gets an ACR accessToken by using an acrRefreshToken */
 export async function acquireACRAccessToken(registryUrl: string, scope: string, acrRefreshToken: string): Promise<string> {
     const acrAccessTokenResponse: { access_token: string } = await ext.request.post(`https://${registryUrl}/oauth2/token`, {
