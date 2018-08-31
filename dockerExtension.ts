@@ -129,6 +129,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     ctx.subscriptions.push(vscode.languages.registerCompletionItemProvider(YAML_MODE_ID, new DockerComposeCompletionItemProvider(), '.'));
 
     ctx.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(DOCKER_INSPECT_SCHEME, new DockerInspectDocumentContentProvider()));
+    ctx.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(TaskContentProvider.scheme, new TaskContentProvider()));
 
     if (azureAccount) {
         AzureUtilityManager.getInstance().setAccount(azureAccount);
@@ -206,6 +207,7 @@ function registerDockerCommands(azureAccount: AzureAccount): void {
     registerAzureCommand('vscode-docker.create-ACR-Registry', createRegistry);
     registerAzureCommand('vscode-docker.queueBuild', queueBuild);
     registerAzureCommand('vscode-docker.pullFromAzure', pullFromAzure);
+    registerAzureCommand('vscode-docker.showBuildTaskProperties', showBuildTaskProperties);
 }
 
 async function consolidateDefaultRegistrySettings(): Promise<void> {
