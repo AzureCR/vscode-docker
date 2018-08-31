@@ -2,7 +2,7 @@ import { Registry } from "azure-arm-containerregistry/lib/models";
 import { ResourceGroup } from "azure-arm-resource/lib/resource/models";
 import { Subscription } from "azure-arm-resource/lib/subscription/models";
 import { BuildTaskNode } from "../../explorer/models/taskNode";
-import { getResourceGroupName } from "../../utils/Azure/acrTools";
+import * as acrTools from '../../utils/Azure/acrTools';
 import { AzureUtilityManager } from "../../utils/azureUtilityManager";
 import { quickPickACRRegistry, quickPickBuildTask, quickPickSubscription } from '../utils/quick-pick-azure';
 import { openTask } from "./task-utils/showTaskManager";

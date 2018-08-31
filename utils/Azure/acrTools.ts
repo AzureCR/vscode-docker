@@ -27,7 +27,7 @@ export function getResourceGroupName(registry: Registry): any {
 }
 
 //Gets resource group object from registry and subscription
-async function getResourceGroup(registry: Registry, subscription: Subscription): Promise<ResourceGroup> { ///to do: move to acr tools
+export async function getResourceGroup(registry: Registry, subscription: Subscription): Promise<ResourceGroup> { ///to do: move to acr tools
     let resourceGroups: ResourceGroup[] = await AzureUtilityManager.getInstance().getResourceGroups(subscription);
     const resourceGroupName = getResourceGroupName(registry);
     return resourceGroups.find((res) => { return res.name === resourceGroupName });
