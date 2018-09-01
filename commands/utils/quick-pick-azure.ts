@@ -36,19 +36,12 @@ export async function quickPickACRRepository(registry: Registry, prompt?: string
 
 export async function quickPickBuildTask(registry: Registry, subscription: Subscription, resourceGroup: ResourceGroup, prompt?: string): Promise<ContainerModels.BuildTask> {
     const placeHolder = prompt ? prompt : 'Choose a Build Task';
+
     const client = AzureUtilityManager.getInstance().getContainerRegistryManagementClient(subscription);
-
-    let buildTasks: ContainerModels.BuildTask[] = [];
-    let buildTaskNames: string[] = [];
-    buildTasks = await client.buildTasks.list(resourceGroup.name, registry.name);
-
-    for (let bt of buildTasks) {
-        buildTaskNames.push(bt.name);
-    }
-    let desiredBuildTask = await vscode.window.showQuickPick(buildTaskNames, { 'canPickMany': false, 'placeHolder': placeHolder });
-    if (!desiredBuildTask) { return; }
-    const buildTask = buildTasks.find((currentBuildTask): boolean => { return desiredBuildTask === currentBuildTask.name });
-    return buildTask;
+    let buildTasks: ContainerModels.BuildTask[] = await client.buildTasks.list(resourceGroup.name, registry.name);
+    const quickpPickBTList = buildTasks.map(buildTask => <IAzureQuickPickItem<ContainerModels.BuildTask>>{ label: buildTask.name, data: buildTask });
+    let desiredBuildTask = await ext.ui.showQuickPick(quickpPickBTList, { 'canPickMany': false, 'placeHolder': placeHolder });
+    return desiredBuildTask.data;
 }
 
 export async function quickPickACRRegistry(canCreateNew: boolean = false, prompt?: string): Promise<Registry> {

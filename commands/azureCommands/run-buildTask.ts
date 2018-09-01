@@ -18,7 +18,7 @@ export async function runBuildTask(context?: BuildTaskNode): Promise<any> {
         subscription = context.subscription;
         registry = context.registry;
         resourceGroup = await acrTools.getResourceGroup(registry, subscription);
-        buildTaskName = context.label;
+        buildTaskName = context.task.name;
     } else { // Command Palette
         subscription = await quickPickSubscription();
         registry = await quickPickACRRegistry();
