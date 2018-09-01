@@ -29,9 +29,10 @@ export async function showBuildTaskProperties(context?: BuildTaskNode): Promise<
     let item: any = await client.buildTasks.get(resourceGroup.name, registry.name, buildTask);
 
     try {
-        let steps = await client.buildSteps.get(resourceGroup.name, registry.name, buildTask, `${buildTask}StepName`);
+        const steps = await client.buildSteps.get(resourceGroup.name, registry.name, buildTask, `${buildTask}StepName`);
         item.properties = steps;
     } catch (error) {
+        console.error(error);
         console.error("Build Step not available for this image due to update in API");
     }
 
