@@ -16,7 +16,6 @@ import { deleteAzureRegistry } from './commands/azureCommands/delete-registry';
 import { deleteRepository } from './commands/azureCommands/delete-repository';
 import { pullFromAzure } from './commands/azureCommands/pull-from-azure';
 import { runBuildTask } from './commands/azureCommands/run-buildTask';
-import { TaskContentProvider } from './commands/azureCommands/task-utils/showTaskManager';
 import { buildImage } from './commands/build-image';
 import { composeDown, composeRestart, composeUp } from './commands/docker-compose';
 import inspectImage from './commands/inspect-image';
@@ -128,7 +127,6 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     ctx.subscriptions.push(vscode.languages.registerCompletionItemProvider(YAML_MODE_ID, new DockerComposeCompletionItemProvider(), '.'));
 
     ctx.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(DOCKER_INSPECT_SCHEME, new DockerInspectDocumentContentProvider()));
-    ctx.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(TaskContentProvider.scheme, new TaskContentProvider()));
 
     if (azureAccount) {
         AzureUtilityManager.getInstance().setAccount(azureAccount);

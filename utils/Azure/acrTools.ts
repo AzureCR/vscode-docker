@@ -69,7 +69,7 @@ export async function getRepositoriesByRegistry(registry: Registry): Promise<Rep
     return allRepos;
 }
 
-/** Sends a custon html request to a registry
+/** Sends a custom html request to a registry
  * @param http_method : the http method, this function currently only uses delete
  * @param login_server: the login server of the registry
  * @param path : the URL path
