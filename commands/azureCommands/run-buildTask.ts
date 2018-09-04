@@ -4,6 +4,7 @@ import { ResourceGroup } from "azure-arm-resource/lib/resource/models";
 import { Subscription } from "azure-arm-resource/lib/subscription/models";
 import vscode = require('vscode');
 import { BuildTaskNode } from "../../explorer/models/taskNode";
+import { ext } from '../../extensionVariables';
 import * as acrTools from '../../utils/Azure/acrTools';
 import { AzureUtilityManager } from "../../utils/azureUtilityManager";
 import { quickPickACRRegistry, quickPickBuildTask, quickPickSubscription } from '../utils/quick-pick-azure';
@@ -35,7 +36,7 @@ export async function runBuildTask(context?: BuildTaskNode): Promise<any> {
     try {
         await client.registries.queueBuild(resourceGroup.name, registry.name, buildRequest);
     } catch (err) {
-        console.log(err);
+        ext.outputChannel.append(err);
     }
     vscode.window.showInformationMessage(`Successfully ran the Build Task, ${buildTaskName}`);
 
