@@ -2,6 +2,7 @@ import { Registry } from "azure-arm-containerregistry/lib/models";
 import { ResourceGroup } from "azure-arm-resource/lib/resource/models";
 import { Subscription } from "azure-arm-resource/lib/subscription/models";
 import { BuildTaskNode } from "../../explorer/models/taskNode";
+import { ext } from '../../extensionVariables';
 import * as acrTools from '../../utils/Azure/acrTools';
 import { AzureUtilityManager } from "../../utils/azureUtilityManager";
 import { quickPickACRRegistry, quickPickBuildTask, quickPickSubscription } from '../utils/quick-pick-azure';
@@ -32,9 +33,11 @@ export async function showBuildTaskProperties(context?: BuildTaskNode): Promise<
         const steps = await client.buildSteps.get(resourceGroup.name, registry.name, buildTask, `${buildTask}StepName`);
         item.properties = steps;
     } catch (error) {
-        console.error(error);
-        console.error("Build Step not available for this image due to update in API");
+        ext.outputChannel.append(error);
+        ext.outputChannel.append("Build Step not available for this image due to update in API");
     }
 
-    openTask(JSON.stringify(item, undefined, 1), buildTask);
+    let indentation = 1;
+    let replacer;
+    openTask(JSON.stringify(item, replacer, indentation), buildTask);
 }

@@ -17,7 +17,7 @@ export class TaskRootNode extends NodeBase {
         public subscription: SubscriptionModels.Subscription,
         public readonly azureAccount: AzureAccount,
         public registry: ContainerModels.Registry,
-        public readonly iconPath: any = {},
+        public readonly iconPath: any = null,
     ) {
         super(label);
     }

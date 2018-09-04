@@ -20,7 +20,7 @@ export class TaskContentProvider implements vscode.TextDocumentContentProvider {
 }
 
 export function decodeBase64(str: string): string {
-    return Buffer.from(str, 'base64').toString('ascii');
+    return Buffer.from(str, 'base64').toString('utf8');
 }
 
 export function encodeBase64(str: string): string {
