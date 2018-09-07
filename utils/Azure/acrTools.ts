@@ -18,6 +18,7 @@ import { Repository } from "./models/repository";
 
 //General helpers
 /**
+ * @param registry gets the subscription for a given registry
  * @returns a subscription object
  */
 export function getSubscriptionFromRegistry(registry: Registry): SubscriptionModels.Subscription {
@@ -28,6 +29,7 @@ export function getSubscriptionFromRegistry(registry: Registry): SubscriptionMod
     });
     return subscription;
 }
+
 export function getResourceGroupName(registry: Registry): any {
     return registry.id.slice(registry.id.search('resourceGroups/') + 'resourceGroups/'.length, registry.id.search('/providers/'));
 }
@@ -67,7 +69,7 @@ export async function getRepositoriesByRegistry(registry: Registry): Promise<Rep
     return allRepos;
 }
 
-/** Sends a custom html request to a registry
+/** Sends a custon html request to a registry
  * @param http_method : the http method, this function currently only uses delete
  * @param login_server: the login server of the registry
  * @param path : the URL path
