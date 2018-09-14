@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { Registry } from 'azure-arm-containerregistry/lib/models';
 import * as ContainerModels from 'azure-arm-containerregistry/lib/models';
+import { ResourceManagementClient } from 'azure-arm-resource';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { Location, Subscription } from 'azure-arm-resource/lib/subscription/models';
 import * as opn from 'opn';
@@ -11,7 +12,6 @@ import * as vscode from "vscode";
 import { IAzureQuickPickItem, UserCancelledError } from 'vscode-azureextensionui';
 import { imageTagRegExp, skus } from '../../constants'
 import { ext } from '../../extensionVariables';
-import { ResourceManagementClient } from '../../node_modules/azure-arm-resource';
 import * as acrTools from '../../utils/Azure/acrTools';
 import { isValidAzureName } from '../../utils/Azure/common';
 import { AzureImage } from "../../utils/Azure/models/image";
